@@ -1,10 +1,12 @@
 # $Id: Makefile,v 1.5 2003/07/22 18:38:04 max Exp $
 # $FreeBSD$
 
-CONFDIR=	/etc/bluetooth
+DIRS+=		ETC_BLUETOOTH
+ETC_BLUETOOTH=	/etc/bluetooth
 CONFS=		hosts
+CONFDIR=	ETC_BLUETOOTH
 FILES=		protocols
-FILESDIR=	/etc/bluetooth
+FILESDIR=	ETC_BLUETOOTH
 FILESMODE=	444
 PACKAGE=	lib${LIB}
 LIB=		bluetooth
