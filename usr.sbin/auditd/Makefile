@@ -3,7 +3,7 @@
 #
 
 OPENBSMDIR=${SRCTOP}/contrib/openbsm
-.PATH: ${OPENBSMDIR}/bin/auditd ${OPENBSMDIR}/etc
+.PATH: ${OPENBSMDIR}/bin/auditd
 
 CFLAGS+=	-I${OPENBSMDIR}
 
