@@ -37,7 +37,6 @@ int  screen_width;
 char ch_erase;
 char ch_kill;
 char smart_terminal;
-char PC;
 static char termcap_buf[1024];
 static char string_buffer[1024];
 static char home[15];
@@ -56,7 +55,7 @@ static struct termios new_settings;
 static char is_a_terminal = false;
 
 void
-init_termcap(int interactive)
+init_termcap(bool interactive)
 {
     char *bufptr;
     char *PCptr;
@@ -139,7 +138,7 @@ init_termcap(int interactive)
     /* get "ce", clear to end */
     if (!overstrike)
     {
-	clear_line = tgetstr("ce", &bufptr);
+		clear_line = tgetstr("ce", &bufptr);
     }
 
     /* get necessary capabilities */
@@ -313,13 +312,4 @@ clear_eol(int len)
 	}
     }
     return(-1);
-}
-
-void
-go_home(void)
-{
-    if (smart_terminal)
-    {
-	putcap(home);
-    }
 }

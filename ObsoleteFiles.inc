@@ -38,6 +38,14 @@
 #   xargs -n1 | sort | uniq -d;
 # done
 
+# 20180615: asf(8) removed
+OLD_FILES+=usr/sbin/asf
+OLD_FILES+=usr/share/man/man8/asf.8.gz
+# 20180609: obsolete libc++ files missed from the 5.0.0 import
+OLD_FILES+=usr/include/c++/v1/__refstring
+OLD_FILES+=usr/include/c++/v1/__undef_min_max
+OLD_FILES+=usr/include/c++/v1/tr1/__refstring
+OLD_FILES+=usr/include/c++/v1/tr1/__undef_min_max
 # 20180607: remove nls support from grep
 OLD_FILES+=usr/share/nls/pt_BR.ISO8859-1/grep.cat
 OLD_FILES+=usr/share/nls/hu_HU.ISO8859-2/grep.cat

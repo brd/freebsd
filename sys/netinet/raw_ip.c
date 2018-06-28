@@ -170,7 +170,7 @@ rip_inshash(struct inpcb *inp)
 	} else
 		hash = 0;
 	pcbhash = &pcbinfo->ipi_hashbase[hash];
-	LIST_INSERT_HEAD(pcbhash, inp, inp_hash);
+	CK_LIST_INSERT_HEAD(pcbhash, inp, inp_hash);
 }
 
 static void
@@ -180,7 +180,7 @@ rip_delhash(struct inpcb *inp)
 	INP_INFO_WLOCK_ASSERT(inp->inp_pcbinfo);
 	INP_WLOCK_ASSERT(inp);
 
-	LIST_REMOVE(inp, inp_hash);
+	CK_LIST_REMOVE(inp, inp_hash);
 }
 #endif /* INET */
 
@@ -300,7 +300,7 @@ rip_input(struct mbuf **mp, int *offp, int proto)
 	hash = INP_PCBHASH_RAW(proto, ip->ip_src.s_addr,
 	    ip->ip_dst.s_addr, V_ripcbinfo.ipi_hashmask);
 	INP_INFO_RLOCK(&V_ripcbinfo);
-	LIST_FOREACH(inp, &V_ripcbinfo.ipi_hashbase[hash], inp_hash) {
+	CK_LIST_FOREACH(inp, &V_ripcbinfo.ipi_hashbase[hash], inp_hash) {
 		if (inp->inp_ip_p != proto)
 			continue;
 #ifdef INET6
@@ -312,27 +312,33 @@ rip_input(struct mbuf **mp, int *offp, int proto)
 			continue;
 		if (inp->inp_faddr.s_addr != ip->ip_src.s_addr)
 			continue;
+		if (last != NULL) {
+			struct mbuf *n;
+
+			n = m_copym(m, 0, M_COPYALL, M_NOWAIT);
+			if (n != NULL)
+			    (void) rip_append(last, ip, n, &ripsrc);
+			/* XXX count dropped packet */
+			INP_RUNLOCK(last);
+			last = NULL;
+		}
+		INP_RLOCK(inp);
+		if (__predict_false(inp->inp_flags2 & INP_FREED))
+			goto skip_1;
 		if (jailed_without_vnet(inp->inp_cred)) {
 			/*
 			 * XXX: If faddr was bound to multicast group,
 			 * jailed raw socket will drop datagram.
 			 */
 			if (prison_check_ip4(inp->inp_cred, &ip->ip_dst) != 0)
-				continue;
+				goto skip_1;
 		}
-		if (last != NULL) {
-			struct mbuf *n;
-
-			n = m_copym(m, 0, M_COPYALL, M_NOWAIT);
-			if (n != NULL)
-		    	    (void) rip_append(last, ip, n, &ripsrc);
-			/* XXX count dropped packet */
-			INP_RUNLOCK(last);
-		}
-		INP_RLOCK(inp);
 		last = inp;
+		continue;
+	skip_1:
+		INP_RUNLOCK(inp);
 	}
-	LIST_FOREACH(inp, &V_ripcbinfo.ipi_hashbase[0], inp_hash) {
+	CK_LIST_FOREACH(inp, &V_ripcbinfo.ipi_hashbase[0], inp_hash) {
 		if (inp->inp_ip_p && inp->inp_ip_p != proto)
 			continue;
 #ifdef INET6
@@ -346,6 +352,19 @@ rip_input(struct mbuf **mp, int *offp, int proto)
 		if (!in_nullhost(inp->inp_faddr) &&
 		    !in_hosteq(inp->inp_faddr, ip->ip_src))
 			continue;
+		if (last != NULL) {
+			struct mbuf *n;
+
+			n = m_copym(m, 0, M_COPYALL, M_NOWAIT);
+			if (n != NULL)
+				(void) rip_append(last, ip, n, &ripsrc);
+			/* XXX count dropped packet */
+			INP_RUNLOCK(last);
+			last = NULL;
+		}
+		INP_RLOCK(inp);
+		if (__predict_false(inp->inp_flags2 & INP_FREED))
+			goto skip_2;
 		if (jailed_without_vnet(inp->inp_cred)) {
 			/*
 			 * Allow raw socket in jail to receive multicast;
@@ -354,7 +373,7 @@ rip_input(struct mbuf **mp, int *offp, int proto)
 			 */
 			if (!IN_MULTICAST(ntohl(ip->ip_dst.s_addr)) &&
 			    prison_check_ip4(inp->inp_cred, &ip->ip_dst) != 0)
-				continue;
+				goto skip_2;
 		}
 		/*
 		 * If this raw socket has multicast state, and we
@@ -395,20 +414,13 @@ rip_input(struct mbuf **mp, int *offp, int proto)
 
 			if (blocked != MCAST_PASS) {
 				IPSTAT_INC(ips_notmember);
-				continue;
+				goto skip_2;
 			}
 		}
-		if (last != NULL) {
-			struct mbuf *n;
-
-			n = m_copym(m, 0, M_COPYALL, M_NOWAIT);
-			if (n != NULL)
-				(void) rip_append(last, ip, n, &ripsrc);
-			/* XXX count dropped packet */
-			INP_RUNLOCK(last);
-		}
-		INP_RLOCK(inp);
 		last = inp;
+		continue;
+	skip_2:
+		INP_RUNLOCK(inp);
 	}
 	INP_INFO_RUNLOCK(&V_ripcbinfo);
 	if (last != NULL) {
@@ -1060,8 +1072,8 @@ rip_pcblist(SYSCTL_HANDLER_ARGS)
 	inp_list = il->il_inp_list;
 
 	INP_INFO_RLOCK(&V_ripcbinfo);
-	for (inp = LIST_FIRST(V_ripcbinfo.ipi_listhead), i = 0; inp && i < n;
-	     inp = LIST_NEXT(inp, inp_list)) {
+	for (inp = CK_LIST_FIRST(V_ripcbinfo.ipi_listhead), i = 0; inp && i < n;
+	     inp = CK_LIST_NEXT(inp, inp_list)) {
 		INP_WLOCK(inp);
 		if (inp->inp_gencnt <= gencnt &&
 		    cr_canseeinpcb(req->td->td_ucred, inp) == 0) {

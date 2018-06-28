@@ -14,13 +14,6 @@ CLEANFILES+=	termcap.db
 SYMLINKS=	${BINDIR}/misc/termcap /etc/termcap
 
 .include <bsd.endian.mk>
-.if ${TARGET_ENDIANNESS} == "1234"
-CAP_MKDB_ENDIAN= -l
-.elif ${TARGET_ENDIANNESS} == "4321"
-CAP_MKDB_ENDIAN= -b
-.else
-CAP_MKDB_ENDIAN=
-.endif
 
 termcap.db: termcap
 	cap_mkdb ${CAP_MKDB_ENDIAN} -f ${.TARGET:R} ${.ALLSRC}

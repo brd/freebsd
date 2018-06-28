@@ -102,6 +102,25 @@ local function setKey(key, name, value)
 	modules[key][name] = value
 end
 
+-- Escapes the named value for use as a literal in a replacement pattern.
+-- e.g. dhcp.host-name gets turned into dhcp%.host%-name to remove the special
+-- meaning.
+local function escapeName(name)
+	return name:gsub("([%p])", "%%%1")
+end
+
+local function processEnvVar(value)
+	for name in value:gmatch("${([^}]+)}") do
+		local replacement = loader.getenv(name) or ""
+		value = value:gsub("${" .. escapeName(name) .. "}", replacement)
+	end
+	for name in value:gmatch("$([%w%p]+)%s*") do
+		local replacement = loader.getenv(name) or ""
+		value = value:gsub("$" .. escapeName(name), replacement)
+	end
+	return value
+end
+
 local pattern_table = {
 	{
 		str = "^%s*(#.*)",
@@ -172,7 +191,7 @@ local pattern_table = {
 	{
 		str = "^%s*([%w%p]+)%s*=%s*\"([%w%s%p]-)\"%s*(.*)",
 		process = function(k, v)
-			if setEnv(k, v) ~= 0 then
+			if setEnv(k, processEnvVar(v)) ~= 0 then
 				print(MSG_FAILSETENV:format(k, v))
 			end
 		end,
@@ -181,7 +200,7 @@ local pattern_table = {
 	{
 		str = "^%s*([%w%p]+)%s*=%s*(%d+)%s*(.*)",
 		process = function(k, v)
-			if setEnv(k, v) ~= 0 then
+			if setEnv(k, processEnvVar(v)) ~= 0 then
 				print(MSG_FAILSETENV:format(k, tostring(v)))
 			end
 		end,
@@ -207,9 +226,6 @@ local function loadModule(mod, silent)
 	for k, v in pairs(mod) do
 		if v.load ~= nil and v.load:lower() == "yes" then
 			local str = "load "
-			if v.flags ~= nil then
-				str = str .. v.flags .. " "
-			end
 			if v.type ~= nil then
 				str = str .. "-t " .. v.type .. " "
 			end
@@ -217,6 +233,9 @@ local function loadModule(mod, silent)
 				str = str .. v.name
 			else
 				str = str .. k
+			end
+			if v.flags ~= nil then
+				str = str .. " " .. v.flags
 			end
 			if v.before ~= nil then
 				pstatus = cli_execute_unparsed(v.before) == 0
@@ -250,6 +269,33 @@ local function loadModule(mod, silent)
 	return status
 end
 
+local function readConfFiles(loaded_files)
+	local f = loader.getenv("loader_conf_files")
+	if f ~= nil then
+		for name in f:gmatch("([%w%p]+)%s*") do
+			if loaded_files[name] ~= nil then
+				goto continue
+			end
+
+			local prefiles = loader.getenv("loader_conf_files")
+
+			print("Loading " .. name)
+			-- These may or may not exist, and that's ok. Do a
+			-- silent parse so that we complain on parse errors but
+			-- not for them simply not existing.
+			if not config.processFile(name, true) then
+				print(MSG_FAILPARSECFG:format(name))
+			end
+
+			loaded_files[name] = true
+			local newfiles = loader.getenv("loader_conf_files")
+			if prefiles ~= newfiles then
+				readConfFiles(loaded_files)
+			end
+			::continue::
+		end
+	end
+end
 
 local function readFile(name, silent)
 	local f = io.open(name)
@@ -379,8 +425,8 @@ function config.loadKernel(other_kernel)
 
 	local function tryLoad(names)
 		for name in names:gmatch("([^;]+)%s*;?") do
-			local r = loader.perform("load " .. flags ..
-			    " " .. name)
+			local r = loader.perform("load " .. name ..
+			     " " .. flags)
 			if r == 0 then
 				return name
 			end
@@ -467,17 +513,8 @@ function config.load(file, reloading)
 		print(MSG_FAILPARSECFG:format(file))
 	end
 
-	local f = loader.getenv("loader_conf_files")
-	if f ~= nil then
-		for name in f:gmatch("([%w%p]+)%s*") do
-			-- These may or may not exist, and that's ok. Do a
-			-- silent parse so that we complain on parse errors but
-			-- not for them simply not existing.
-			if not config.processFile(name, true) then
-				print(MSG_FAILPARSECFG:format(name))
-			end
-		end
-	end
+	local loaded_files = {file = true}
+	readConfFiles(loaded_files)
 
 	checkNextboot()
 

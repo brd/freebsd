@@ -70,7 +70,7 @@ static struct cmd_handler disp_table[] = {
 	{NULL, NULL}
 };
 
-static void
+static void __dead2
 usage(void)
 {
 	errx(EX_USAGE,
