@@ -852,6 +852,19 @@ IMAKE_INSTALL=	INSTALL="install ${INSTALLFLAGS}"
 IMAKE_MTREE=	MTREE_CMD="mtree ${MTREEFLAGS}"
 .endif
 
+DESTDIR_MTREEFLAGS=	-deU
+# When creating worldtmp we don't need to set the directories as owned by root
+# so we also pass -W
+WORLDTMP_MTREEFLAGS=	-deUW
+.if defined(NO_ROOT)
+# When building with -DNO_ROOT we shouldn't be changing the directories
+# that are created by mtree to be owned by root/wheel.
+DESTDIR_MTREEFLAGS+=	-W
+.endif
+MTREE?=	mtree
+WORLDTMP_MTREE=	${MTREE} ${WORLDTMP_MTREEFLAGS}
+DESTDIR_MTREE=	${MTREE} ${DESTDIR_MTREEFLAGS}
+
 # kernel stage
 KMAKEENV=	${WMAKEENV:NSYSROOT=*}
 KMAKE=		${KMAKEENV} ${MAKE} ${.MAKEFLAGS} ${KERNEL_FLAGS} KERNEL=${INSTKERNNAME}
