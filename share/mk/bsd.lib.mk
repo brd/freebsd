@@ -174,9 +174,6 @@ DEBUGFILEDIR=${DEBUGDIR}${_SHLIBDIR}
 .else
 DEBUGFILEDIR=${_SHLIBDIR}/.debug
 .endif
-.if !exists(${DESTDIR}${DEBUGFILEDIR})
-DEBUGMKDIR=
-.endif
 .else
 SHLIB_NAME_FULL=${SHLIB_NAME}
 .endif
@@ -371,30 +368,35 @@ _SHLINSTALLFLAGS:=	${_SHLINSTALLFLAGS${ie}}
 .if !defined(INTERNALLIB)
 realinstall: _libinstall
 .ORDER: beforeinstall _libinstall
-_libinstall:
+.if defined(SHLIB_NAME)
+DIRS+=	_SHLIBDIR
+_libinstall: installdirs-_SHLIBDIR
+.if ${MK_DEBUG_FILES} != "no"
+DIRS+=	DEBUGFILEDIR
+_libinstall: installdirs-DEBUGFILEDIR
+.endif
+.else
+DIRS+=	_LIBDIR
+_libinstall: installdirs-_LIBDIR
+.endif
 .if defined(LIB) && !empty(LIB) && ${MK_INSTALLLIB} != "no"
-	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -d ${DESTDIR}${_LIBDIR}
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    ${_INSTALLFLAGS} lib${LIB_PRIVATE}${LIB}.a ${DESTDIR}${_LIBDIR}/
 .endif
 .if ${MK_PROFILE} != "no" && defined(LIB) && !empty(LIB)
-	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -d ${DESTDIR}${_LIBDIR}
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},profile} -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    ${_INSTALLFLAGS} lib${LIB_PRIVATE}${LIB}_p.a ${DESTDIR}${_LIBDIR}/
 .endif
 .if defined(SHLIB_NAME)
-	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -d ${DESTDIR}${_SHLIBDIR}
 	${INSTALL} ${TAG_ARGS} ${STRIP} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    ${_INSTALLFLAGS} ${_SHLINSTALLFLAGS} \
 	    ${SHLIB_NAME} ${DESTDIR}${_SHLIBDIR}/
 .if ${MK_DEBUG_FILES} != "no"
-	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},debug} -d ${DESTDIR}${DEBUGFILEDIR}/
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},debug} -o ${LIBOWN} -g ${LIBGRP} -m ${DEBUGMODE} \
 	    ${_INSTALLFLAGS} \
 	    ${SHLIB_NAME}.debug ${DESTDIR}${DEBUGFILEDIR}/
 .endif
 .if defined(SHLIB_LINK)
-	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -d ${DESTDIR}${_LIBDIR}
 .if commands(${SHLIB_LINK:R}.ld)
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -S -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    ${_INSTALLFLAGS} ${SHLIB_LINK:R}.ld \
@@ -481,6 +483,7 @@ SUBDIR_TARGETS+=	check
 TESTS_LD_LIBRARY_PATH+=	${.OBJDIR}
 .endif
 
+.include <bsd.dirs.mk>
 .include <bsd.dep.mk>
 .include <bsd.clang-analyze.mk>
 .include <bsd.obj.mk>

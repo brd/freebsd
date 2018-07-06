@@ -73,9 +73,6 @@ DEBUGFILEDIR=	${DEBUGDIR}${BINDIR}
 .else
 DEBUGFILEDIR?=	${BINDIR}/.debug
 .endif
-.if !exists(${DESTDIR}${DEBUGFILEDIR})
-DEBUGMKDIR=
-.endif
 .else
 PROG_FULL=	${PROG}
 .endif
@@ -229,16 +226,22 @@ _INSTALLFLAGS:=	${INSTALLFLAGS}
 _INSTALLFLAGS:=	${_INSTALLFLAGS${ie}}
 .endfor
 
+.if defined(PROG)
+.if defined(BINDIR)
+DIRS+=	BINDIR
+.endif
 .if !target(realinstall) && !defined(INTERNALPROG)
 realinstall: _proginstall
 .ORDER: beforeinstall _proginstall
-_proginstall:
-.if defined(PROG)
-	${INSTALL} ${TAG_ARGS} -d ${DESTDIR}${BINDIR}
+.if ${MK_DEBUG_FILES} != "no"
+DIRS+=	DEBUGFILEDIR
+_proginstall: installdirs-BINDIR installdirs-DEBUGFILEDIR
+.else
+_proginstall: installdirs-BINDIR
+.endif
 	${INSTALL} ${TAG_ARGS} ${STRIP} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
 	    ${_INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}/${PROGNAME}
 .if ${MK_DEBUG_FILES} != "no"
-	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},debug} -d ${DESTDIR}${DEBUGFILEDIR}/
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},debug} -o ${BINOWN} -g ${BINGRP} -m ${DEBUGMODE} \
 	    ${PROGNAME}.debug ${DESTDIR}${DEBUGFILEDIR}/${PROGNAME}.debug
 .endif
@@ -249,7 +252,7 @@ _proginstall:
 realinstall: _scriptsinstall
 .ORDER: beforeinstall _scriptsinstall
 
-SCRIPTSDIR?=	${BINDIR}
+SCRIPTSDIR?=	BINDIR
 SCRIPTSOWN?=	${BINOWN}
 SCRIPTSGRP?=	${BINGRP}
 SCRIPTSMODE?=	${BINMODE}
@@ -264,18 +267,46 @@ SCRIPTSNAME_${script:T}?=	${SCRIPTSNAME}
 .else
 SCRIPTSNAME_${script:T}?=	${script:T:R}
 .endif
-SCRIPTSDIR_${script:T}?=	${SCRIPTSDIR}
 SCRIPTSOWN_${script:T}?=	${SCRIPTSOWN}
 SCRIPTSGRP_${script:T}?=	${SCRIPTSGRP}
 SCRIPTSMODE_${script:T}?=	${SCRIPTSMODE}
 STAGE_AS_${script:T}=		${SCRIPTSDIR_${script:T}}/${SCRIPTSNAME_${script:T}}
-_scriptsinstall: _SCRIPTSINS_${script:T}
+
+.if defined(SCRIPTSDIR_${script:T})
+_SCRIPTSDIR=	SCRIPTSDIR_${script:T}
+.else
+_SCRIPTSDIR=	SCRIPTSDIR
+.endif
+
+.if ${_SCRIPTSDIR:S/^\///} == ${_SCRIPTSDIR}
+.warning brd1: _: ${_SCRIPTSDIR};
+__SCRIPTSDIR=	${${_SCRIPTSDIR}}
+.else
+__SCRIPTSDIR=	${_SCRIPTSDIR}
+.endif
+#SCRIPTSDIR_${script:T}?=	${${${__SCRIPTSDIR}}}
+
+# Append DIR to DIRS if not already in place -- DIRS is already filtered, so
+# this is primarily to ease inspection.
+.for d in ${DIRS}
+.warning d: ${d}; ${${d}}
+_DIRS+=	${${d}}
+.endfor
+.warning foo ${SCRIPTSDIR_${script}}
+.if ${DIRS:M${SCRIPTSDIR_${script}}} == ""
+#.if ${_DIRS:M${${SCRIPTSDIR_${script:T}}}} == ""
+#DIRS+=	${SCRIPTSDIR_${script:T}}
+#.else
+#SCRIPTSDIR_${script:T}?=       ${${${__SCRIPTSDIR}}}
+#.endif
+.endif
+
+_scriptsinstall: installdirs-${SCRIPTSDIR_${script:T}} _SCRIPTSINS_${script:T}
 _SCRIPTSINS_${script:T}: ${script}
-	${INSTALL} ${TAG_ARGS} -d ${DESTDIR}${SCRIPTSDIR_${.ALLSRC:T}}
-	${INSTALL} ${TAG_ARGS} -o ${SCRIPTSOWN_${.ALLSRC:T}} \
-	    -g ${SCRIPTSGRP_${.ALLSRC:T}} -m ${SCRIPTSMODE_${.ALLSRC:T}} \
+	${INSTALL} ${TAG_ARGS} -o ${SCRIPTSOWN_${script:T}} \
+	    -g ${SCRIPTSGRP_${script:T}} -m ${SCRIPTSMODE_${script:T}} \
 	    ${.ALLSRC} \
-	    ${DESTDIR}${SCRIPTSDIR_${.ALLSRC:T}}/${SCRIPTSNAME_${.ALLSRC:T}}
+	    ${DESTDIR}${${SCRIPTSDIR_${script:T}}}/${SCRIPTSNAME_${script:T}}
 .endfor
 .endif
 
@@ -313,6 +344,7 @@ TESTS_PATH+=		${.OBJDIR}
 OBJS_DEPEND_GUESS+= ${SRCS:M*.h}
 .endif
 
+.include <bsd.dirs.mk>
 .include <bsd.dep.mk>
 .include <bsd.clang-analyze.mk>
 .include <bsd.obj.mk>

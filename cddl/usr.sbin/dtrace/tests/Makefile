@@ -8,7 +8,7 @@ TESTS_SUBDIRS+=	common
 KYUAFILE=	yes
 
 .PATH:		${.CURDIR}/tools
-SCRIPTSDIR=	${TESTSDIR}
+SCRIPTSDIR=	TESTSDIR
 SCRIPTS=	dtest.sh
 
 .include <bsd.test.mk>

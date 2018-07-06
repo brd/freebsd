@@ -19,28 +19,19 @@ FILESDIR=	/etc/pam.d
 FILESMODE=	644
 
 .if ${MK_AT} != "no"
-FILESGROUPS+=	AT
-AT+=	atrun
-ATPACKAGE+=	at
-ATDIR=		${FILESDIR}
-ATMODE=		${FILESMODE}
+FILES+=		atrun
+PACKAGE_atrun=	at
 .endif
 
 .if ${MK_FTP} != "no"
-FILESGROUPS+=	FTP
-FTP+=	ftpd
-FTPPACKAGE+=	ftp
-FTPDIR=		${FILESDIR}
-FTPMODE=	${FILESMODE}
+FILES+=		ftpd
+PACKAGE_ftpd=	ftp
 LINKS=	${FILESDIR}/ftpd ${FILESDIR}/ftp
 .endif
 
 .if ${MK_TELNET} != "no"
-FILESGROUPS+=	TELNET
-TELNET+=	telnetd
-TELNETPACKAGE+=	telnet
-TELNETDIR=	${FILESDIR}
-TELNETMODE=	${FILESMODE}
+FILES+=		telnetd
+PACKAGE_telnetd=telnet
 .endif
 
 FILESMODE_README=	444

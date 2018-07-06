@@ -61,7 +61,7 @@ TEST_INTERFACE.${_T}= atf
 SCRIPTS+= ${ATF_TESTS_SH}
 _TESTS+= ${ATF_TESTS_SH}
 .for _T in ${ATF_TESTS_SH}
-SCRIPTSDIR_${_T}= ${TESTSDIR}
+SCRIPTSDIR_${_T}= TESTSDIR
 TEST_INTERFACE.${_T}= atf
 CLEANFILES+= ${_T} ${_T}.tmp
 # TODO(jmmv): It seems to me that this SED and SRC functionality should
@@ -86,7 +86,7 @@ ${_T}: ${ATF_TESTS_SH_SRC_${_T}}
 SCRIPTS+= ${ATF_TESTS_KSH93}
 _TESTS+= ${ATF_TESTS_KSH93}
 .for _T in ${ATF_TESTS_KSH93}
-SCRIPTSDIR_${_T}= ${TESTSDIR}
+SCRIPTSDIR_${_T}= TESTSDIR
 TEST_INTERFACE.${_T}= atf
 TEST_METADATA.${_T}+= required_programs="ksh93"
 CLEANFILES+= ${_T} ${_T}.tmp
