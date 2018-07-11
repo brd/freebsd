@@ -280,25 +280,28 @@ _SCRIPTSDIR=	SCRIPTSDIR
 
 .if ${_SCRIPTSDIR:S/^\///} == ${_SCRIPTSDIR}
 .warning brd1: _: ${_SCRIPTSDIR};
-__SCRIPTSDIR=	${${_SCRIPTSDIR}}
+__SCRIPTSDIR=	${_SCRIPTSDIR}
+DIRS+=	${_SCRIPTSDIR}
 .else
 __SCRIPTSDIR=	${_SCRIPTSDIR}
+DIRS+=	${_SCRIPTSDIR}
 .endif
-#SCRIPTSDIR_${script:T}?=	${${${__SCRIPTSDIR}}}
+SCRIPTSDIR_${script:T}?=	${__SCRIPTSDIR}
 
 # Append DIR to DIRS if not already in place -- DIRS is already filtered, so
 # this is primarily to ease inspection.
 .for d in ${DIRS}
 .warning d: ${d}; ${${d}}
-_DIRS+=	${${d}}
+_SCDIRS+=	${${d}}
 .endfor
-.warning foo ${SCRIPTSDIR_${script}}
+.warning scriptsdir_script: ${SCRIPTSDIR_${script:T}}
+.warning dirs: ${DIRS}
 .if ${DIRS:M${SCRIPTSDIR_${script}}} == ""
-#.if ${_DIRS:M${${SCRIPTSDIR_${script:T}}}} == ""
-#DIRS+=	${SCRIPTSDIR_${script:T}}
-#.else
-#SCRIPTSDIR_${script:T}?=       ${${${__SCRIPTSDIR}}}
-#.endif
+.if ${_SCDIRS:M${${SCRIPTSDIR_${script:T}}}} == ""
+DIRS+=	${SCRIPTSDIR_${script:T}}
+.else
+SCRIPTSDIR_${script:T}?=       ${${${__SCRIPTSDIR}}}
+.endif
 .endif
 
 _scriptsinstall: installdirs-${SCRIPTSDIR_${script:T}} _SCRIPTSINS_${script:T}
