@@ -20,7 +20,7 @@ PACKAGE?=	tests
 
 FILESGROUPS+=	${PACKAGE}FILES
 ${PACKAGE}FILESPACKAGE=	${PACKAGE}
-${PACKAGE}FILESDIR=	${TESTSDIR}
+${PACKAGE}FILESDIR=	TESTSDIR
 
 # List of subdirectories containing tests into which to recurse.  This has the
 # same semantics as SUBDIR at build-time.  However, the directories listed here

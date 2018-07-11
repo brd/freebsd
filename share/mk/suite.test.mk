@@ -49,7 +49,7 @@ KYUAFILE?= auto
 
 .if ${KYUAFILE:tl} != "no"
 ${PACKAGE}FILES+=	Kyuafile
-${PACKAGE}FILESDIR_Kyuafile=	${TESTSDIR}
+${PACKAGE}FILESDIR_Kyuafile=	TESTSDIR
 .endif
 
 .for _T in ${_TESTS}
