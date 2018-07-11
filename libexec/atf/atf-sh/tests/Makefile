@@ -17,7 +17,7 @@ ATF_TESTS_SH_SED_integration_test= \
     -e 's,__ATF_SH__,/usr/libexec/atf-sh,g'
 
 SCRIPTS+=		misc_helpers
-SCRIPTSDIR_misc_helpers=${TESTSDIR}
+SCRIPTSDIR_misc_helpers=TESTSDIR
 CLEANFILES+=		misc_helpers misc_helpers.tmp
 misc_helpers: misc_helpers.sh
 	echo '#! /usr/libexec/atf-sh' >${.TARGET}.tmp
