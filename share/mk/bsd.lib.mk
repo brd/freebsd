@@ -160,7 +160,7 @@ PO_FLAG=-pg
 	    -c ${.IMPSRC} -o ${.TARGET}
 	${CTFCONVERT_CMD}
 
-_LIBDIR:=${LIBDIR}
+_LIBDIR:=LIBDIR
 _SHLIBDIR:=${SHLIBDIR}
 
 .if defined(SHLIB_NAME)
@@ -376,8 +376,8 @@ DIRS+=	DEBUGFILEDIR
 _libinstall: installdirs-DEBUGFILEDIR
 .endif
 .else
-DIRS+=	_LIBDIR
-_libinstall: installdirs-_LIBDIR
+DIRS+=	${_LIBDIR}
+_libinstall: installdirs-${_LIBDIR}
 .endif
 .if defined(LIB) && !empty(LIB) && ${MK_INSTALLLIB} != "no"
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
