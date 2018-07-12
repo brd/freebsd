@@ -77,7 +77,7 @@ ${_T}: ${TAP_TESTS_PERL_SRC_${_T}}
 SCRIPTS+= ${TAP_TESTS_SH}
 _TESTS+= ${TAP_TESTS_SH}
 .for _T in ${TAP_TESTS_SH}
-SCRIPTSDIR_${_T}= ${TESTSDIR}
+SCRIPTSDIR_${_T}= TESTSDIR
 TEST_INTERFACE.${_T}= tap
 CLEANFILES+= ${_T} ${_T}.tmp
 # TODO(jmmv): It seems to me that this SED and SRC functionality should
