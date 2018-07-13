@@ -388,12 +388,10 @@ _libinstall: installdirs-${_LIBDIR}
 	    ${_INSTALLFLAGS} lib${LIB_PRIVATE}${LIB}_p.a ${DESTDIR}${${_LIBDIR}}/
 .endif
 .if defined(SHLIB_NAME)
-	${ECHO} brd3: ${PWD}
 	${INSTALL} ${TAG_ARGS} ${STRIP} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    ${_INSTALLFLAGS} ${_SHLINSTALLFLAGS} \
 	    ${SHLIB_NAME} ${DESTDIR}${${_SHLIBDIR}}/
 .if ${MK_DEBUG_FILES} != "no"
-	${ECHO} brd4
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},debug} -o ${LIBOWN} -g ${LIBGRP} -m ${DEBUGMODE} \
 	    ${_INSTALLFLAGS} \
 	    ${SHLIB_NAME}.debug ${DESTDIR}${DEBUGFILEDIR}/
