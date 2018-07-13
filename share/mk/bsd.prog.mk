@@ -306,7 +306,7 @@ _SCDIRS+=	${${d}}
 .warning brd2: SCRIPTSDIR_${script:T}
 DIRS+=	SCRIPTSDIR_${script:T}
 .else
-SCRIPTSDIR_${script:T}?=       ${${${__SCRIPTSDIR}}}
+SCRIPTSDIR_${script:T}?=	${__SCRIPTSDIR}
 .endif
 .endif
 
