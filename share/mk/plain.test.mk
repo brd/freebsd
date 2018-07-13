@@ -26,7 +26,7 @@ PLAIN_TESTS_SH?=
 PROGS+= ${PLAIN_TESTS_C}
 _TESTS+= ${PLAIN_TESTS_C}
 .for _T in ${PLAIN_TESTS_C}
-BINDIR.${_T}= ${TESTSDIR}
+BINDIR.${_T}= TESTSDIR
 MAN.${_T}?= # empty
 SRCS.${_T}?= ${_T}.c
 TEST_INTERFACE.${_T}= plain
@@ -37,7 +37,7 @@ TEST_INTERFACE.${_T}= plain
 PROGS_CXX+= ${PLAIN_TESTS_CXX}
 _TESTS+= ${PLAIN_TESTS_CXX}
 .for _T in ${PLAIN_TESTS_CXX}
-BINDIR.${_T}= ${TESTSDIR}
+BINDIR.${_T}= TESTSDIR
 MAN.${_T}?= # empty
 SRCS.${_T}?= ${_T}.cc
 TEST_INTERFACE.${_T}= plain
@@ -48,7 +48,7 @@ TEST_INTERFACE.${_T}= plain
 SCRIPTS+= ${PLAIN_TESTS_SH}
 _TESTS+= ${PLAIN_TESTS_SH}
 .for _T in ${PLAIN_TESTS_SH}
-SCRIPTSDIR_${_T}= ${TESTSDIR}
+SCRIPTSDIR_${_T}= TESTSDIR
 TEST_INTERFACE.${_T}= plain
 CLEANFILES+= ${_T} ${_T}.tmp
 # TODO(jmmv): It seems to me that this SED and SRC functionality should
