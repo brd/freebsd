@@ -32,7 +32,7 @@ TAP_PERL_INTERPRETER?=	${LOCALBASE}/bin/perl
 PROGS+= ${TAP_TESTS_C}
 _TESTS+= ${TAP_TESTS_C}
 .for _T in ${TAP_TESTS_C}
-BINDIR.${_T}= ${TESTSDIR}
+BINDIR.${_T}= TESTSDIR
 MAN.${_T}?= # empty
 SRCS.${_T}?= ${_T}.c
 TEST_INTERFACE.${_T}= tap
@@ -43,7 +43,7 @@ TEST_INTERFACE.${_T}= tap
 PROGS_CXX+= ${TAP_TESTS_CXX}
 _TESTS+= ${TAP_TESTS_CXX}
 .for _T in ${TAP_TESTS_CXX}
-BINDIR.${_T}= ${TESTSDIR}
+BINDIR.${_T}= TESTSDIR
 MAN.${_T}?= # empty
 SRCS.${_T}?= ${_T}.cc
 TEST_INTERFACE.${_T}= tap
@@ -54,7 +54,7 @@ TEST_INTERFACE.${_T}= tap
 SCRIPTS+= ${TAP_TESTS_PERL}
 _TESTS+= ${TAP_TESTS_PERL}
 .for _T in ${TAP_TESTS_PERL}
-SCRIPTSDIR_${_T}= ${TESTSDIR}
+SCRIPTSDIR_${_T}= TESTSDIR
 TEST_INTERFACE.${_T}= tap
 TEST_METADATA.${_T}+= required_programs="${TAP_PERL_INTERPRETER}"
 CLEANFILES+= ${_T} ${_T}.tmp
