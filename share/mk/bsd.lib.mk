@@ -161,18 +161,18 @@ PO_FLAG=-pg
 	${CTFCONVERT_CMD}
 
 _LIBDIR:=LIBDIR
-_SHLIBDIR:=${SHLIBDIR}
+_SHLIBDIR:=SHLIBDIR
 
 .if defined(SHLIB_NAME)
 .if ${MK_DEBUG_FILES} != "no"
 SHLIB_NAME_FULL=${SHLIB_NAME}.full
 # Use ${DEBUGDIR} for base system debug files, else .debug subdirectory
-.if ${_SHLIBDIR} == "/boot" ||\
-    ${SHLIBDIR:C%/lib(/.*)?$%/lib%} == "/lib" ||\
-    ${SHLIBDIR:C%/usr/(tests/)?lib(32|exec)?(/.*)?%/usr/lib%} == "/usr/lib"
-DEBUGFILEDIR=${DEBUGDIR}${_SHLIBDIR}
+.if ${${_SHLIBDIR}} == "/boot" ||\
+    ${${_SHLIBDIR}:C%/lib(/.*)?$%/lib%} == "/lib" ||\
+    ${${_SHLIBDIR}:C%/usr/(tests/)?lib(32|exec)?(/.*)?%/usr/lib%} == "/usr/lib"
+DEBUGFILEDIR=${DEBUGDIR}${${_SHLIBDIR}}
 .else
-DEBUGFILEDIR=${_SHLIBDIR}/.debug
+DEBUGFILEDIR=${${_SHLIBDIR}}/.debug
 .endif
 .else
 SHLIB_NAME_FULL=${SHLIB_NAME}
@@ -258,8 +258,8 @@ ${SHLIB_NAME_FULL}: beforelinking
 .if defined(SHLIB_LINK)
 .if defined(SHLIB_LDSCRIPT) && !empty(SHLIB_LDSCRIPT) && exists(${.CURDIR}/${SHLIB_LDSCRIPT})
 ${SHLIB_LINK:R}.ld: ${.CURDIR}/${SHLIB_LDSCRIPT}
-	sed -e 's,@@SHLIB@@,${_SHLIBDIR}/${SHLIB_NAME},g' \
-	    -e 's,@@LIBDIR@@,${_LIBDIR},g' \
+	sed -e 's,@@SHLIB@@,${${_SHLIBDIR}}/${SHLIB_NAME},g' \
+	    -e 's,@@LIBDIR@@,${${_LIBDIR}},g' \
 	    ${.ALLSRC} > ${.TARGET}
 
 ${SHLIB_NAME_FULL}: ${SHLIB_LINK:R}.ld
@@ -369,8 +369,8 @@ _SHLINSTALLFLAGS:=	${_SHLINSTALLFLAGS${ie}}
 realinstall: _libinstall
 .ORDER: beforeinstall _libinstall
 .if defined(SHLIB_NAME)
-DIRS+=	_SHLIBDIR
-_libinstall: installdirs-_SHLIBDIR
+DIRS+=	${_SHLIBDIR}
+_libinstall: installdirs-${_SHLIBDIR}
 .if ${MK_DEBUG_FILES} != "no"
 DIRS+=	DEBUGFILEDIR
 _libinstall: installdirs-DEBUGFILEDIR
@@ -381,17 +381,19 @@ _libinstall: installdirs-${_LIBDIR}
 .endif
 .if defined(LIB) && !empty(LIB) && ${MK_INSTALLLIB} != "no"
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    ${_INSTALLFLAGS} lib${LIB_PRIVATE}${LIB}.a ${DESTDIR}${_LIBDIR}/
+	    ${_INSTALLFLAGS} lib${LIB_PRIVATE}${LIB}.a ${DESTDIR}${${_LIBDIR}}/
 .endif
 .if ${MK_PROFILE} != "no" && defined(LIB) && !empty(LIB)
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},profile} -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    ${_INSTALLFLAGS} lib${LIB_PRIVATE}${LIB}_p.a ${DESTDIR}${_LIBDIR}/
+	    ${_INSTALLFLAGS} lib${LIB_PRIVATE}${LIB}_p.a ${DESTDIR}${${_LIBDIR}}/
 .endif
 .if defined(SHLIB_NAME)
+	${ECHO} brd3: ${PWD}
 	${INSTALL} ${TAG_ARGS} ${STRIP} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    ${_INSTALLFLAGS} ${_SHLINSTALLFLAGS} \
-	    ${SHLIB_NAME} ${DESTDIR}${_SHLIBDIR}/
+	    ${SHLIB_NAME} ${DESTDIR}${${_SHLIBDIR}}/
 .if ${MK_DEBUG_FILES} != "no"
+	${ECHO} brd4
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},debug} -o ${LIBOWN} -g ${LIBGRP} -m ${DEBUGMODE} \
 	    ${_INSTALLFLAGS} \
 	    ${SHLIB_NAME}.debug ${DESTDIR}${DEBUGFILEDIR}/
@@ -400,29 +402,29 @@ _libinstall: installdirs-${_LIBDIR}
 .if commands(${SHLIB_LINK:R}.ld)
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -S -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    ${_INSTALLFLAGS} ${SHLIB_LINK:R}.ld \
-	    ${DESTDIR}${_LIBDIR}/${SHLIB_LINK}
+	    ${DESTDIR}${${_LIBDIR}}/${SHLIB_LINK}
 .for _SHLIB_LINK_LINK in ${SHLIB_LDSCRIPT_LINKS}
-	${INSTALL_LIBSYMLINK} ${SHLIB_LINK} ${DESTDIR}${_LIBDIR}/${_SHLIB_LINK_LINK}
+	${INSTALL_LIBSYMLINK} ${SHLIB_LINK} ${DESTDIR}${${_LIBDIR}}/${_SHLIB_LINK_LINK}
 .endfor
 .else
-.if ${_SHLIBDIR} == ${_LIBDIR}
+.if ${${_SHLIBDIR}} == ${${_LIBDIR}}
 .if ${SHLIB_LINK:Mlib*}
-	${INSTALL_RSYMLINK} ${TAG_ARGS:D${TAG_ARGS},development} ${SHLIB_NAME} ${DESTDIR}${_LIBDIR}/${SHLIB_LINK}
+	${INSTALL_RSYMLINK} ${TAG_ARGS:D${TAG_ARGS},development} ${SHLIB_NAME} ${DESTDIR}${${_LIBDIR}}/${SHLIB_LINK}
 .else
-	${INSTALL_RSYMLINK} ${TAG_ARGS} ${DESTDIR}${_SHLIBDIR}/${SHLIB_NAME} \
-	    ${DESTDIR}${_LIBDIR}/${SHLIB_LINK}
+	${INSTALL_RSYMLINK} ${TAG_ARGS} ${DESTDIR}${${_SHLIBDIR}}/${SHLIB_NAME} \
+	    ${DESTDIR}${${_LIBDIR}}/${SHLIB_LINK}
 .endif
 .else
 .if ${SHLIB_LINK:Mlib*}
-	${INSTALL_RSYMLINK} ${TAG_ARGS:D${TAG_ARGS},development} ${DESTDIR}${_SHLIBDIR}/${SHLIB_NAME} \
-	    ${DESTDIR}${_LIBDIR}/${SHLIB_LINK}
+	${INSTALL_RSYMLINK} ${TAG_ARGS:D${TAG_ARGS},development} ${DESTDIR}${${_SHLIBDIR}}/${SHLIB_NAME} \
+	    ${DESTDIR}${${_LIBDIR}}/${SHLIB_LINK}
 .else
-	${INSTALL_RSYMLINK} ${TAG_ARGS} ${DESTDIR}${_SHLIBDIR}/${SHLIB_NAME} \
-	    ${DESTDIR}${_LIBDIR}/${SHLIB_LINK}
+	${INSTALL_RSYMLINK} ${TAG_ARGS} ${DESTDIR}${${_SHLIBDIR}}/${SHLIB_NAME} \
+	    ${DESTDIR}${${_LIBDIR}}/${SHLIB_LINK}
 .endif
-.if exists(${DESTDIR}${_LIBDIR}/${SHLIB_NAME})
-	-chflags noschg ${DESTDIR}${_LIBDIR}/${SHLIB_NAME}
-	rm -f ${DESTDIR}${_LIBDIR}/${SHLIB_NAME}
+.if exists(${DESTDIR}${${_LIBDIR}}/${SHLIB_NAME})
+	-chflags noschg ${DESTDIR}${${_LIBDIR}}/${SHLIB_NAME}
+	rm -f ${DESTDIR}${${_LIBDIR}}/${SHLIB_NAME}
 .endif
 .endif
 .endif # SHLIB_LDSCRIPT
@@ -430,7 +432,7 @@ _libinstall: installdirs-${_LIBDIR}
 .endif # SHIB_NAME
 .if defined(INSTALL_PIC_ARCHIVE) && defined(LIB) && !empty(LIB) && ${MK_TOOLCHAIN} != "no"
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},development} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    ${_INSTALLFLAGS} lib${LIB}_pic.a ${DESTDIR}${_LIBDIR}/
+	    ${_INSTALLFLAGS} lib${LIB}_pic.a ${DESTDIR}${${_LIBDIR}}/
 .endif
 .endif # !defined(INTERNALLIB)
 
