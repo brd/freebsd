@@ -19,7 +19,7 @@ SCRIPTS=	blocking \
 		tcptrack \
 		udptrack
 
-SCRIPTSDIR= ${SHAREDIR}/dtrace
+SCRIPTSDIR=	${SHAREDIR}/dtrace
 
 DSRCS=		mbuf.d
 
