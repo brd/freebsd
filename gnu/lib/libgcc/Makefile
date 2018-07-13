@@ -355,16 +355,11 @@ libgcc_eh_p.a:	${EH_OBJS_P}
 _LIBS+= libgcc_eh_p.a
 .endif
 
-_libinstall: _lib-eh-install
-
-_lib-eh-install:
 .if ${MK_INSTALLLIB} != "no"
-	${INSTALL} ${TAG_ARGS} -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-		${_INSTALLFLAGS} libgcc_eh.a ${DESTDIR}${LIBDIR}
+_LIBS+=	libgcc_eh.a
 .endif
 .if ${MK_PROFILE} != "no"
-	${INSTALL} ${TAG_ARGS} -C -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-		${_INSTALLFLAGS} libgcc_eh_p.a ${DESTDIR}${LIBDIR}
+_LIBS=	libgcc_eh_p.a
 .endif
 
 CLEANFILES+=	libgcc_eh.a libgcc_eh_p.a ${EH_OBJS_T} ${EH_OBJS_P}
