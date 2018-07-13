@@ -281,9 +281,10 @@ _SCRIPTSDIR=	SCRIPTSDIR
 .if ${_SCRIPTSDIR:S/^\///} == ${_SCRIPTSDIR}
 # ${_SCRIPTSDIR} specifies a variable
 .warning brd1: _: ${_SCRIPTSDIR}; ${${_SCRIPTSDIR}}
-__SCRIPTSDIR=	${${_SCRIPTSDIR}}
-DIRS+=	${${_SCRIPTSDIR}}
+__SCRIPTSDIR=	${_SCRIPTSDIR}
+DIRS+=	${_SCRIPTSDIR}
 .else
+.warning brd4: ${__SCRIPTSDIR}
 __SCRIPTSDIR=	${_SCRIPTSDIR}
 DIRS+=	SCRIPTSDIR
 .endif
@@ -300,7 +301,8 @@ _SCDIRS+=	${${d}}
 .warning script:T: ${script:T}
 .warning dirs: ${DIRS}
 .if ${DIRS:M${SCRIPTSDIR_${script:T}}} == ""
-.if ${_SCDIRS:M${${SCRIPTSDIR_${script:T}}}} == ""
+.warning brd3
+.if ${_SCDIRS:M${SCRIPTSDIR_${script:T}}} == ""
 .warning brd2: SCRIPTSDIR_${script:T}
 DIRS+=	SCRIPTSDIR_${script:T}
 .else
