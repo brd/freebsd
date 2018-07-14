@@ -261,6 +261,15 @@ STAGE_AS_SETS+= scripts
 stage_as.scripts: ${SCRIPTS}
 FLAGS.stage_as.scripts= -m ${SCRIPTSMODE}
 STAGE_FILES_DIR.scripts= ${STAGE_OBJTOP}
+
+
+.if ${SCRIPTSDIR:S/^\///} == ${SCRIPTSDIR}
+# ${SCRIPTSDIR} specifies a variable that specifies a path
+DIRS+=	${SCRIPTSDIR}
+.else
+DIRS+=	SCRIPTSDIR
+.endif
+
 .for script in ${SCRIPTS}
 .if defined(SCRIPTSNAME)
 SCRIPTSNAME_${script:T}?=	${SCRIPTSNAME}
@@ -272,50 +281,36 @@ SCRIPTSGRP_${script:T}?=	${SCRIPTSGRP}
 SCRIPTSMODE_${script:T}?=	${SCRIPTSMODE}
 STAGE_AS_${script:T}=		${SCRIPTSDIR_${script:T}}/${SCRIPTSNAME_${script:T}}
 
-.if defined(SCRIPTSDIR_${script:T})
-_SCRIPTSDIR=	SCRIPTSDIR_${script:T}
+# Determine the directory for the current file
+SCRIPTSDIR_${script:T}?=	${SCRIPTSDIR}
+.if ${SCRIPTSDIR_${script:T}:S/^\///} == ${SCRIPTSDIR_${script:T}}
+# ${SCRIPTSDIR_${script:T}} specifies a variable
+_SCRIPTSDIR_${script:T}=	${SCRIPTSDIR_${script:T}}
 .else
-_SCRIPTSDIR=	SCRIPTSDIR
+# DIR directly specifies a path
+_SCRIPTSDIR_${script:T}=	SCRIPTSDIR_${script:T}
 .endif
-
-.if ${_SCRIPTSDIR:S/^\///} == ${_SCRIPTSDIR}
-# ${_SCRIPTSDIR} specifies a variable
-.warning brd1: _: ${_SCRIPTSDIR}; ${${_SCRIPTSDIR}}
-__SCRIPTSDIR=	${_SCRIPTSDIR}
-DIRS+=	${_SCRIPTSDIR}
-.else
-.warning brd4: ${__SCRIPTSDIR}
-__SCRIPTSDIR=	${_SCRIPTSDIR}
-DIRS+=	SCRIPTSDIR
-.endif
-SCRIPTSDIR_${script:T}?=	${__SCRIPTSDIR}
+SCRIPTSPREFIX_${script:T}=	${DESTDIR}${${_SCRIPTSDIR_${script:T}}}
 
 # Append DIR to DIRS if not already in place -- DIRS is already filtered, so
 # this is primarily to ease inspection.
 .for d in ${DIRS}
-.warning d: ${d}; ${${d}}
 _SCDIRS+=	${${d}}
 .endfor
-.warning scriptsdir_script: ${SCRIPTSDIR_${script:T}}
-.warning script: ${script}
-.warning script:T: ${script:T}
-.warning dirs: ${DIRS}
-.if ${DIRS:M${SCRIPTSDIR_${script:T}}} == ""
-.warning brd3
-.if ${_SCDIRS:M${SCRIPTSDIR_${script:T}}} == ""
-.warning brd2: SCRIPTSDIR_${script:T}
+.if ${DIRS:M${_SCRIPTSDIR_${script:T}}} == ""
+.if ${_SCDIRS:M${${_SCRIPTSDIR_${script:T}}}} == ""
 DIRS+=	SCRIPTSDIR_${script:T}
 .else
-SCRIPTSDIR_${script:T}?=	${__SCRIPTSDIR}
+_SCRIPTSDIR_${script:T}=	SCRIPTSDIR
 .endif
 .endif
 
-_scriptsinstall: installdirs-${SCRIPTSDIR_${script:T}} _SCRIPTSINS_${script:T}
+_scriptsinstall: installdirs-${_SCRIPTSDIR_${script:T}} _SCRIPTSINS_${script:T}
 _SCRIPTSINS_${script:T}: ${script}
 	${INSTALL} ${TAG_ARGS} -o ${SCRIPTSOWN_${script:T}} \
 	    -g ${SCRIPTSGRP_${script:T}} -m ${SCRIPTSMODE_${script:T}} \
 	    ${.ALLSRC} \
-	    ${DESTDIR}${${SCRIPTSDIR_${script:T}}}/${SCRIPTSNAME_${script:T}}
+	    ${SCRIPTSPREFIX_${script:T}}/${SCRIPTSNAME_${script:T}}
 .endfor
 .endif
 
