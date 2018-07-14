@@ -14,7 +14,7 @@ NETBSD_ATF_TESTS_C+=	sha2_test
 
 NETBSD_ATF_TESTS_SH=	hash_test
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 PROGS+=		h_hash
 

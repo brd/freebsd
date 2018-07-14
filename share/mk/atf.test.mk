@@ -27,7 +27,7 @@ ATF_TESTS_KSH93?=
 PROGS+= ${ATF_TESTS_C}
 _TESTS+= ${ATF_TESTS_C}
 .for _T in ${ATF_TESTS_C}
-BINDIR.${_T}= ${TESTSDIR}
+BINDIR.${_T}= TESTSDIR
 MAN.${_T}?= # empty
 SRCS.${_T}?= ${_T}.c
 DPADD.${_T}+= ${LIBATF_C}
@@ -44,7 +44,7 @@ TEST_INTERFACE.${_T}= atf
 PROGS_CXX+= ${ATF_TESTS_CXX}
 _TESTS+= ${ATF_TESTS_CXX}
 .for _T in ${ATF_TESTS_CXX}
-BINDIR.${_T}= ${TESTSDIR}
+BINDIR.${_T}= TESTSDIR
 MAN.${_T}?= # empty
 SRCS.${_T}?= ${_T}${CXX_SUFFIX:U.cc}
 DPADD.${_T}+= ${LIBATF_CXX} ${LIBATF_C}

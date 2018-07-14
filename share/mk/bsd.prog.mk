@@ -71,7 +71,13 @@ PROG_FULL=${PROG}.full
      )
 DEBUGFILEDIR=	${DEBUGDIR}${BINDIR}
 .else
-DEBUGFILEDIR?=	${BINDIR}/.debug
+.if ${BINDIR:S/^\///} == ${BINDIR}
+# ${BINDIR} specifies a variable
+_BINDIR=	${BINDIR}
+.else
+_BINDIR=	BINDIR
+.endif
+DEBUGFILEDIR?=	${${_BINDIR}}/.debug
 .endif
 .else
 PROG_FULL=	${PROG}
@@ -228,19 +234,26 @@ _INSTALLFLAGS:=	${_INSTALLFLAGS${ie}}
 
 .if defined(PROG)
 .if defined(BINDIR)
+.if ${BINDIR:S/^\///} == ${BINDIR}
+# ${BINDIR} specifies a variable
+DIRS+=	${BINDIR}
+_BINDIR=	${BINDIR}
+.else
 DIRS+=	BINDIR
+_BINDIR	BINDIR
+.endif
 .endif
 .if !target(realinstall) && !defined(INTERNALPROG)
 realinstall: _proginstall
 .ORDER: beforeinstall _proginstall
 .if ${MK_DEBUG_FILES} != "no"
 DIRS+=	DEBUGFILEDIR
-_proginstall: installdirs-BINDIR installdirs-DEBUGFILEDIR
+_proginstall: installdirs-${_BINDIR} installdirs-DEBUGFILEDIR
 .else
-_proginstall: installdirs-BINDIR
+_proginstall: installdirs-${_BINDIR}
 .endif
 	${INSTALL} ${TAG_ARGS} ${STRIP} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
-	    ${_INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}/${PROGNAME}
+	    ${_INSTALLFLAGS} ${PROG} ${DESTDIR}${${_BINDIR}}/${PROGNAME}
 .if ${MK_DEBUG_FILES} != "no"
 	${INSTALL} ${TAG_ARGS:D${TAG_ARGS},debug} -o ${BINOWN} -g ${BINGRP} -m ${DEBUGMODE} \
 	    ${PROGNAME}.debug ${DESTDIR}${DEBUGFILEDIR}/${PROGNAME}.debug
@@ -266,8 +279,10 @@ STAGE_FILES_DIR.scripts= ${STAGE_OBJTOP}
 .if ${SCRIPTSDIR:S/^\///} == ${SCRIPTSDIR}
 # ${SCRIPTSDIR} specifies a variable that specifies a path
 DIRS+=	${SCRIPTSDIR}
+_SCRIPTSDIR=	${SCRIPTSDIR}
 .else
 DIRS+=	SCRIPTSDIR
+_SCRIPTSDIR=	SCRIPTSDIR
 .endif
 
 .for script in ${SCRIPTS}
@@ -282,35 +297,36 @@ SCRIPTSMODE_${script:T}?=	${SCRIPTSMODE}
 STAGE_AS_${script:T}=		${SCRIPTSDIR_${script:T}}/${SCRIPTSNAME_${script:T}}
 
 # Determine the directory for the current file
-SCRIPTSDIR_${script:T}?=	${SCRIPTSDIR}
-.if ${SCRIPTSDIR_${script:T}:S/^\///} == ${SCRIPTSDIR_${script:T}}
-# ${SCRIPTSDIR_${script:T}} specifies a variable
-_SCRIPTSDIR_${script:T}=	${SCRIPTSDIR_${script:T}}
+SCRIPTSDIR_${script}?=	${SCRIPTSDIR}
+.if ${SCRIPTSDIR_${script}:S/^\///} == ${SCRIPTSDIR_${script}}
+# ${SCRIPTSDIR_${script}} specifies a variable
+_SCRIPTSDIR_${script}=	${SCRIPTSDIR_${script}}
 .else
 # DIR directly specifies a path
-_SCRIPTSDIR_${script:T}=	SCRIPTSDIR_${script:T}
+_SCRIPTSDIR_${script}=	SCRIPTSDIR_${script}
 .endif
-SCRIPTSPREFIX_${script:T}=	${DESTDIR}${${_SCRIPTSDIR_${script:T}}}
+SCRIPTSPREFIX_${script}=	${DESTDIR}${${_SCRIPTSDIR_${script}}}
 
 # Append DIR to DIRS if not already in place -- DIRS is already filtered, so
 # this is primarily to ease inspection.
 .for d in ${DIRS}
 _SCDIRS+=	${${d}}
 .endfor
-.if ${DIRS:M${_SCRIPTSDIR_${script:T}}} == ""
-.if ${_SCDIRS:M${${_SCRIPTSDIR_${script:T}}}} == ""
-DIRS+=	SCRIPTSDIR_${script:T}
+.if ${DIRS:M${_SCRIPTSDIR_${script}}} == ""
+.if ${_SCDIRS:M${${_SCRIPTSDIR_${script}}}} == ""
+DIRS+=	${SCRIPTSDIR_${script}}
 .else
-_SCRIPTSDIR_${script:T}=	SCRIPTSDIR
+_SCRIPTSDIR_${script}=	SCRIPTSDIR
 .endif
 .endif
 
-_scriptsinstall: installdirs-${_SCRIPTSDIR_${script:T}} _SCRIPTSINS_${script:T}
-_SCRIPTSINS_${script:T}: ${script}
-	${INSTALL} ${TAG_ARGS} -o ${SCRIPTSOWN_${script:T}} \
+_scriptsinstall: installdirs-${_SCRIPTSDIR_${script}} _SCRIPTSINS_${script}
+_SCRIPTSINS_${script}: ${script}
+	${ECHO} brbdbrd
+	${INSTALL} ${TAG_ARGS} -o ${SCRIPTSOWN_${script}} \
 	    -g ${SCRIPTSGRP_${script:T}} -m ${SCRIPTSMODE_${script:T}} \
 	    ${.ALLSRC} \
-	    ${SCRIPTSPREFIX_${script:T}}/${SCRIPTSNAME_${script:T}}
+	    ${SCRIPTSPREFIX_${script}}/${SCRIPTSNAME_${script:T}}
 .endfor
 .endif
 
