@@ -71,6 +71,7 @@ PROG_FULL=${PROG}.full
      )
 DEBUGFILEDIR=	${DEBUGDIR}${BINDIR}
 .else
+.if defined(BINDIR)
 .if ${BINDIR:S/^\///} == ${BINDIR}
 # ${BINDIR} specifies a variable
 _BINDIR=	${BINDIR}
@@ -78,6 +79,7 @@ _BINDIR=	${BINDIR}
 _BINDIR=	BINDIR
 .endif
 DEBUGFILEDIR?=	${${_BINDIR}}/.debug
+.endif
 .endif
 .else
 PROG_FULL=	${PROG}
