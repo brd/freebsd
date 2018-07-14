@@ -240,7 +240,7 @@ DIRS+=	${BINDIR}
 _BINDIR=	${BINDIR}
 .else
 DIRS+=	BINDIR
-_BINDIR	BINDIR
+_BINDIR=	BINDIR
 .endif
 .endif
 .if !target(realinstall) && !defined(INTERNALPROG)
