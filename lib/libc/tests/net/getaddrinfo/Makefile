@@ -6,7 +6,7 @@ TESTSRC=	${SRCTOP}/contrib/netbsd-tests/lib/libc/net/${.CURDIR:T}
 
 .include <bsd.own.mk>
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 .error "This testcase needs to be ported to FreeBSD (the output from getaddrinfo_test differs from NetBSD)"
 

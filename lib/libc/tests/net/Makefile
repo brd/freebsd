@@ -18,7 +18,7 @@ NETBSD_ATF_TESTS_SH=	nsdispatch_test
 NETBSD_ATF_TESTS_SH+=	protoent_test
 NETBSD_ATF_TESTS_SH+=	servent_test
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 PROGS=		h_nsd_recurse
 PROGS+=		h_protoent

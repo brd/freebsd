@@ -6,7 +6,7 @@ PACKAGE=	tests
 
 TESTSDIR=	${TESTSBASE}/lib/libc/nss
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 ATF_TESTS_C+=	getaddrinfo_test
 ATF_TESTS_C+=	getgr_test

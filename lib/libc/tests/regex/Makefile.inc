@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-BINDIR?=	${TESTSDIR}
+BINDIR?=	TESTSDIR
 
 # SKIP_LEFTASSOC -> these testcases fail on FreeBSD.
 IMPLEMENTATION?=      -DREGEX_SPENCER -DSKIP_LEFTASSOC

@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 NETBSD_ATF_TESTS_C=	fileactions_test
 NETBSD_ATF_TESTS_C+=	spawn_test
