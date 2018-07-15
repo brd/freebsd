@@ -1,6 +1,7 @@
 # $FreeBSD$
 
 PACKAGE=	tests
+BINDIR=		TESTSDIR
 
 NETBSD_ATF_TESTS_SH=		cat_test
 
