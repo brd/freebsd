@@ -15,6 +15,7 @@ LOCALBASE?=	/usr/local
 
 # Tests install directory
 TESTSDIR?=	${TESTSBASE}/${RELDIR:H}
+BINDIR?=	TESTSDIR
 
 PACKAGE?=	tests
 
