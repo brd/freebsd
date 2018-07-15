@@ -12,6 +12,7 @@ PROGS=		h_fileactions
 PROGS+=		h_spawn
 PROGS+=		h_spawnattr
 
+SCRIPTSDIR=	TESTSDIR
 SCRIPTS=	h_nonexec
 SCRIPTS+=	h_zero
 
