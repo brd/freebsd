@@ -324,7 +324,6 @@ _SCRIPTSDIR_${script}=	SCRIPTSDIR
 
 _scriptsinstall: installdirs-${_SCRIPTSDIR_${script}} _SCRIPTSINS_${script}
 _SCRIPTSINS_${script}: ${script}
-	${ECHO} brbdbrd
 	${INSTALL} ${TAG_ARGS} -o ${SCRIPTSOWN_${script}} \
 	    -g ${SCRIPTSGRP_${script:T}} -m ${SCRIPTSMODE_${script:T}} \
 	    ${.ALLSRC} \
