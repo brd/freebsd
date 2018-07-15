@@ -289,13 +289,13 @@ _SCRIPTSDIR=	SCRIPTSDIR
 
 .for script in ${SCRIPTS}
 .if defined(SCRIPTSNAME)
-SCRIPTSNAME_${script:T}?=	${SCRIPTSNAME}
+SCRIPTSNAME_${script}?=	${SCRIPTSNAME}
 .else
-SCRIPTSNAME_${script:T}?=	${script:T:R}
+SCRIPTSNAME_${script}?=	${script:T:R}
 .endif
-SCRIPTSOWN_${script:T}?=	${SCRIPTSOWN}
-SCRIPTSGRP_${script:T}?=	${SCRIPTSGRP}
-SCRIPTSMODE_${script:T}?=	${SCRIPTSMODE}
+SCRIPTSOWN_${script}?=	${SCRIPTSOWN}
+SCRIPTSGRP_${script}?=	${SCRIPTSGRP}
+SCRIPTSMODE_${script}?=	${SCRIPTSMODE}
 STAGE_AS_${script:T}=		${SCRIPTSDIR_${script:T}}/${SCRIPTSNAME_${script:T}}
 
 # Determine the directory for the current file
@@ -325,9 +325,9 @@ _SCRIPTSDIR_${script}=	SCRIPTSDIR
 _scriptsinstall: installdirs-${_SCRIPTSDIR_${script}} _SCRIPTSINS_${script}
 _SCRIPTSINS_${script}: ${script}
 	${INSTALL} ${TAG_ARGS} -o ${SCRIPTSOWN_${script}} \
-	    -g ${SCRIPTSGRP_${script:T}} -m ${SCRIPTSMODE_${script:T}} \
+	    -g ${SCRIPTSGRP_${script}} -m ${SCRIPTSMODE_${script}} \
 	    ${.ALLSRC} \
-	    ${SCRIPTSPREFIX_${script}}/${SCRIPTSNAME_${script:T}}
+	    ${SCRIPTSPREFIX_${script}}/${SCRIPTSNAME_${script}}
 .endfor
 .endif
 
