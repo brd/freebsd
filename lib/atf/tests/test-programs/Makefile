@@ -3,7 +3,6 @@
 .include <bsd.init.mk>
 
 TESTSDIR=	${TESTSBASE}/lib/atf/test-programs
-BINDIR=		TESTSDIR
 
 KYUAFILE=	yes
 
