@@ -13,6 +13,7 @@ ${PACKAGE}FILES+=	tools-nfs4-trivial.test
 ${PACKAGE}FILES+=	tools-posix.test
 
 SCRIPTS+=	run
+SCRIPTSDIR=	TESTSDIR
 
 TAP_TESTS_SH+=	00
 TAP_TESTS_SH+=	01

@@ -1,7 +1,7 @@
 # $FreeBSD$
 
 TESTSDIR=	${TESTSBASE}/sbin/pfctl/files
-BINDIR=		TESTSDIR
+FILESDIR=	TESTSDIR
 
 # We use ${.CURDIR} as workaround so that the glob patterns work.
 FILES=		${.CURDIR}/pf????.in

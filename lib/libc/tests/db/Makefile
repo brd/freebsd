@@ -2,7 +2,7 @@
 
 PACKAGE=	tests
 
-BINDIR=		TESTSDIR
+SCRIPTSDIR=	TESTSDIR
 
 PROGS=		h_db
 PROGS+=		h_lfsr

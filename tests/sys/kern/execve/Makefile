@@ -17,6 +17,7 @@ CLEANFILES+=	empty
 CLEANFILES+=	sparse_aout
 CLEANFILES+=	trunc_aout
 
+SCRIPTSDIR=	TESTSDIR
 SCRIPTS+=	bad_interp_len
 SCRIPTS+=	dev_null_script
 SCRIPTS+=	empty

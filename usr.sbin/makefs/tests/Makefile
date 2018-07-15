@@ -8,6 +8,7 @@ BINDIR=		TESTSDIR
 # XXX: PACKAGE support for SCRIPTS
 SCRIPTS+=	makefs_tests_common.sh
 SCRIPTSNAME_makefs_tests_common.sh=	makefs_tests_common.sh
+SCRIPTSDIR=	TESTSDIR
 
 TEST_METADATA.makefs_cd9660_tests+=	required_files="/sbin/mount_cd9660"
 
