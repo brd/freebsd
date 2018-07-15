@@ -4,6 +4,7 @@
 
 ATF=		${SRCTOP}/contrib/atf
 .PATH:		${ATF}/atf-sh
+BINDIR=		TESTSDIR
 
 ATF_TESTS_SH+=	atf_check_test
 ATF_TESTS_SH+=	config_test
