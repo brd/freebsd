@@ -27,7 +27,7 @@ SRCS.${_T}=	${_T}.c test_helpers.c
 PROGS+=		${p}
 SRCS.${p}=	${p}.c
 MAN.${p}=	# defined
-BINDIR.${p}=	${TESTSDIR}
+BINDIR.${p}=	TESTSDIR
 .endfor
 version_helper.o: atf-version
 

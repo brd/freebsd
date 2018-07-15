@@ -37,7 +37,7 @@ LIBADD+=		pthread
 LIBADD.fpu_test+=	m
 LIBADD.sem_test+=	rt
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 PROGS=		h_atexit
 PROGS+=		h_cancel

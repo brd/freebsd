@@ -4,8 +4,8 @@
 
 PACKAGE=tests
 TESTSDIR=${TESTSBASE}/sys/cddl/zfs/tests/threadsappend
-FILESDIR=${TESTSDIR}
-BINDIR=${TESTSDIR}
+FILESDIR=	TESTSDIR
+BINDIR=	TESTSDIR
 
 ATF_TESTS_KSH93+=	threadsappend_test
 TEST_METADATA+=		required_user="root"

@@ -2,7 +2,7 @@
 
 PACKAGE=	tests
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 PROGS+=		crypt
 WARNS?=		6

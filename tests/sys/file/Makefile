@@ -2,7 +2,7 @@
 
 TESTSDIR=	${TESTSBASE}/sys/file
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 TAP_TESTS_C+=	closefrom_test
 TAP_TESTS_C+=	dup_test

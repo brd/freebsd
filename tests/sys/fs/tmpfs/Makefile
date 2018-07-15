@@ -39,7 +39,7 @@ ${PACKAGE}FILES+=	h_funcs.subr
 ${PACKAGE}FILESDIR=	${TESTSDIR}
 
 PROGS+=			h_tools
-BINDIR.h_tools=		${TESTSDIR}
+BINDIR.h_tools=		TESTSDIR
 
 # NOTE: dev_t is represented by 64-bits after r321920 (it was 16-bits
 # previously).

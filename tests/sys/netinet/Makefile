@@ -1,7 +1,7 @@
 # $FreeBSD$
 
 TESTSDIR=	${TESTSBASE}/sys/netinet
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 ATF_TESTS_SH=	fibs_test
 

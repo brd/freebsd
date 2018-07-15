@@ -3,7 +3,7 @@
 .include <bsd.own.mk>
 
 TESTSDIR=	${TESTSBASE}/sys/net
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 ATF_TESTS_SH+=	if_lagg_test
 ATF_TESTS_SH+=	if_clone_test

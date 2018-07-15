@@ -10,7 +10,7 @@ LIBXOSRC=	${SRCTOP}/contrib/libxo
 
 .c.out .o.out:
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 ATF_TESTS_SH+=	functional_test
 

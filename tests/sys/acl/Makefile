@@ -4,7 +4,7 @@ PACKAGE=	tests
 
 TESTSDIR=	${TESTSBASE}/sys/acl
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 ${PACKAGE}FILES+=	tools-crossfs.test
 ${PACKAGE}FILES+=	tools-nfs4.test

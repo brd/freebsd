@@ -5,7 +5,7 @@
 PACKAGE=tests
 TESTSDIR=${TESTSBASE}/sys/cddl/zfs/tests/exec
 FILESDIR=${TESTSDIR}
-BINDIR=${TESTSDIR}
+BINDIR=	TESTSDIR
 
 ATF_TESTS_KSH93+=	exec_test
 TEST_METADATA+=		required_user="root"

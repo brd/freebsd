@@ -19,7 +19,7 @@ LIBXOSRC=	${SRCTOP}/contrib/libxo
 
 ATF_TESTS_SH+=	functional_test
 
-BINDIR=	${TESTSDIR}
+BINDIR=	TESTSDIR
 
 ${PACKAGE}FILES+= test_01.E.err
 ${PACKAGE}FILES+= test_01.E.out

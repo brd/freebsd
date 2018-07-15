@@ -4,8 +4,8 @@
 
 PACKAGE=tests
 TESTSDIR=${TESTSBASE}/sys/cddl/zfs/tests/ctime
-FILESDIR=${TESTSDIR}
-BINDIR=${TESTSDIR}
+FILESDIR=	TESTSDIR
+BINDIR=		TESTSDIR
 
 ${PACKAGE}FILES+=	setup.ksh
 ${PACKAGE}FILES+=	cleanup.ksh

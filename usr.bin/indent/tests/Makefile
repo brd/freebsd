@@ -48,6 +48,6 @@ ${PACKAGE}FILES+=	wchar.0.stdout
 
 ATF_TESTS_SH+=		functional_test
 
-BINDIR=	${TESTSDIR}
+BINDIR=	TESTSDIR
 
 .include <bsd.test.mk>

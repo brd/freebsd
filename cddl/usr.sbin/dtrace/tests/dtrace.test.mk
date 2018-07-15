@@ -33,7 +33,7 @@ SRCS.${prog}+=	${prog:S/^tst.//:S/.exe$/.d/}
 .endif
 .endfor
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 MAN=
 
 # Some tests depend on the internals of their corresponding test programs,

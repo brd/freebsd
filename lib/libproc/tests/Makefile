@@ -4,7 +4,7 @@ ATF_TESTS_C+=	proc_test
 
 PROGS=		target_prog
 SRCS_target_prog=	target_prog.c
-BINDIR_target_prog=	${TESTSDIR}
+BINDIR_target_prog=	TESTSDIR
 
 WARNS?=		6
 LIBADD=	elf proc rtld_db util

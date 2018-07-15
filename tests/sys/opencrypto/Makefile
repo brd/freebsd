@@ -3,7 +3,7 @@
 PACKAGE=	tests
 
 TESTSDIR=	${TESTSBASE}/sys/opencrypto
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 CFLAGS+=	-I${SRCTOP}/tests
 CFLAGS.blake2_test.c	+= -I${SRCTOP}/sys/opencrypto

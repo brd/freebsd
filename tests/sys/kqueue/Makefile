@@ -3,7 +3,7 @@
 TESTSRC=	${SRCTOP}/contrib/netbsd-tests/kernel/kqueue
 
 TESTSDIR=	${TESTSBASE}/sys/kqueue
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 NETBSD_ATF_TESTS_C=	proc1_test
 # XXX: fails `ke.fflags & NOTE_TRACKERR` invariant

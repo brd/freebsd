@@ -6,7 +6,7 @@ _LIBARCHIVEDIR=	${SRCTOP}/contrib/libarchive
 
 ATF_TESTS_SH+=	functional_test
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 PROGS+=		bsdcat_test
 

@@ -25,7 +25,7 @@ SRCS.${_T}=	${_T}.cpp test_helpers.cpp
 PROGS_CXX+=	${p}
 SRCS.${p}=	${p}.cpp
 MAN.${p}=	# defined
-BINDIR.${p}=	${TESTSDIR}
+BINDIR.${p}=	TESTSDIR
 .endfor
 version_helper.o: atf-version
 

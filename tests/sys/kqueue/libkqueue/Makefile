@@ -1,7 +1,7 @@
 # $FreeBSD$
 
 TESTSDIR=	${TESTSBASE}/sys/kqueue/libkqueue
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 # libkqueue and test suite by Mark Heily <mark@heily.com>
 TAP_TESTS_SH=	kqueue_test

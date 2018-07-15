@@ -20,7 +20,7 @@ ATF_TESTS_C+=	pdeathsig
 
 ATF_TESTS_SH+=	coredump_phnum_test
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 PROGS+=		coredump_phnum_helper
 PROGS+=		pdeathsig_helper
 

@@ -2,7 +2,7 @@
 
 TESTSDIR=	${TESTSBASE}/sys/kern/execve
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 MAN=
 

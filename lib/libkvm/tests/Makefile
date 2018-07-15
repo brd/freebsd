@@ -13,7 +13,7 @@ LIBADD+=	kvm
 
 WARNS?=		6
 
-BINDIR=		${TESTSDIR}
+BINDIR=		TESTSDIR
 
 .for t in kvm_geterr_test kvm_open_test kvm_open2_test
 SRCS.$t=	$t.c kvm_test_common.c
