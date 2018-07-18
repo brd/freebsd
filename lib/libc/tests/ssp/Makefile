@@ -15,7 +15,7 @@ LDADD+=	-lssp
 
 NETBSD_ATF_TESTS_SH=	ssp_test
 
-SCRIPTSDIR=	TESTSDIR
+BINDIR=		TESTSDIR
 
 PROGS=		h_fgets
 PROGS+=		h_gets
