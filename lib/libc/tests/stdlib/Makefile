@@ -40,7 +40,7 @@ NETBSD_ATF_TESTS_SH=	getopt_test
 
 .include "../Makefile.netbsd-tests"
 
-BINDIR=		TESTSDIR
+SCRIPTSDIR=	TESTSDIR
 
 # TODO: see comment above
 #PROGS+=		h_atexit
