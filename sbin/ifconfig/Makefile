@@ -70,8 +70,6 @@ WARNS?=	2
 HAS_TESTS=
 SUBDIR.${MK_TESTS}+= tests
 
-FILES=	regdomain.xml
-FILESMODE=	444
-FILESDIR=	/etc
+CONFS=	regdomain.xml
 
 .include <bsd.prog.mk>
