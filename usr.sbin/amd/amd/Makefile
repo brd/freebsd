@@ -12,6 +12,7 @@
 
 PROG=	amd
 MAN=	amd.8
+CONFS=	amd.map
 SRCS=	am_ops.c amd.c amfs_auto.c amfs_direct.c amfs_error.c amfs_generic.c
 SRCS+=	amfs_host.c amfs_link.c amfs_linkx.c amfs_nfsl.c
 SRCS+=	amfs_nfsx.c amfs_program.c amfs_root.c amfs_toplvl.c
