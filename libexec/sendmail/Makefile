@@ -3,8 +3,7 @@
 SUBDIR=	mail.local \
 	smrsh
 
-FILES=	rc.sendmail
-FILESDIR=	/etc
+CONFS=	rc.sendmail
 
 DIRS+=	VAR_SPOOL_CLIENTMQUEUE
 VAR_SPOOL_CLIENTMQUEUE=	/var/spool/clientmqueue
