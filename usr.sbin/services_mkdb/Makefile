@@ -15,7 +15,7 @@ CAP_MKDB_ENDIAN?= -b
 DIRS+=	VAR_DB
 VAR_DB=	/var/db
 
-distribution: installconfig installdirs-VAR_DB
+distribution: installconfig installdirs
 	services_mkdb ${CAP_MKDB_ENDIAN} -q -o ${DESTDIR}/var/db/services.db \
 		${DESTDIR}/etc/services
 
