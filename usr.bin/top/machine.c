@@ -59,7 +59,6 @@ static const int namelength = 10;
 /* TOP_JID_LEN based on max of 999999 */
 #define TOP_JID_LEN 6
 #define TOP_SWAP_LEN 5
-static int cmdlengthdelta;
 
 /* get_process_info passes back a handle.  This is what it looks like: */
 
@@ -409,13 +408,13 @@ format_header(const char *uname_field)
 		    ps.jail ? TOP_JID_LEN : 0, ps.jail ? " JID" : "",
 		    namelength, namelength, uname_field);
 		sbuf_cat(header, "   VCSW  IVCSW   READ  WRITE  FAULT  TOTAL PERCENT COMMAND");
+		sbuf_finish(header);
 		break;
 	}
 	case DISP_MAX:
 		assert("displaymode must not be set to DISP_MAX");
 	}
 
-	cmdlengthdelta = sbuf_len(header) - 7;
 	return sbuf_data(header);
 }
 
@@ -871,7 +870,6 @@ format_next_process(struct handle * xhandle, char *(*get_userid)(int), int flags
 	long p_tot, s_tot;
 	char *cmdbuf = NULL;
 	char **args;
-	const int cmdlen = 256;
 	static struct sbuf* procbuf = NULL;
 
 	/* clean up from last time. */
@@ -936,32 +934,31 @@ format_next_process(struct handle * xhandle, char *(*get_userid)(int), int flags
 		break;
 	}
 
-	cmdbuf = calloc(cmdlen + 1, 1);
+	cmdbuf = calloc(screen_width + 1, 1);
 	if (cmdbuf == NULL) {
-		warn("calloc(%d)", cmdlen + 1);
+		warn("calloc(%d)", screen_width + 1);
 		return NULL;
 	}
 
 	if (!(flags & FMT_SHOWARGS)) {
 		if (ps.thread && pp->ki_flag & P_HADTHREADS &&
 		    pp->ki_tdname[0]) {
-			snprintf(cmdbuf, cmdlen, "%s{%s%s}", pp->ki_comm,
+			snprintf(cmdbuf, screen_width, "%s{%s%s}", pp->ki_comm,
 			    pp->ki_tdname, pp->ki_moretdname);
 		} else {
-			snprintf(cmdbuf, cmdlen, "%s", pp->ki_comm);
+			snprintf(cmdbuf, screen_width, "%s", pp->ki_comm);
 		}
 	} else {
 		if (pp->ki_flag & P_SYSTEM ||
-		    pp->ki_args == NULL ||
-		    (args = kvm_getargv(kd, pp, cmdlen)) == NULL ||
+		    (args = kvm_getargv(kd, pp, screen_width)) == NULL ||
 		    !(*args)) {
 			if (ps.thread && pp->ki_flag & P_HADTHREADS &&
 		    	    pp->ki_tdname[0]) {
-				snprintf(cmdbuf, cmdlen,
+				snprintf(cmdbuf, screen_width,
 				    "[%s{%s%s}]", pp->ki_comm, pp->ki_tdname,
 				    pp->ki_moretdname);
 			} else {
-				snprintf(cmdbuf, cmdlen,
+				snprintf(cmdbuf, screen_width,
 				    "[%s]", pp->ki_comm);
 			}
 		} else {
@@ -971,7 +968,7 @@ format_next_process(struct handle * xhandle, char *(*get_userid)(int), int flags
 			size_t argbuflen;
 			size_t len;
 
-			argbuflen = cmdlen * 4;
+			argbuflen = screen_width * 4;
 			argbuf = calloc(argbuflen + 1, 1);
 			if (argbuf == NULL) {
 				warn("calloc(%zu)", argbuflen + 1);
@@ -1003,21 +1000,21 @@ format_next_process(struct handle * xhandle, char *(*get_userid)(int), int flags
 			if (strcmp(cmd, pp->ki_comm) != 0) {
 				if (ps.thread && pp->ki_flag & P_HADTHREADS &&
 				    pp->ki_tdname[0])
-					snprintf(cmdbuf, cmdlen,
+					snprintf(cmdbuf, screen_width,
 					    "%s (%s){%s%s}", argbuf,
 					    pp->ki_comm, pp->ki_tdname,
 					    pp->ki_moretdname);
 				else
-					snprintf(cmdbuf, cmdlen,
+					snprintf(cmdbuf, screen_width,
 					    "%s (%s)", argbuf, pp->ki_comm);
 			} else {
 				if (ps.thread && pp->ki_flag & P_HADTHREADS &&
 				    pp->ki_tdname[0])
-					snprintf(cmdbuf, cmdlen,
+					snprintf(cmdbuf, screen_width,
 					    "%s{%s%s}", argbuf, pp->ki_tdname,
 					    pp->ki_moretdname);
 				else
-					strlcpy(cmdbuf, argbuf, cmdlen);
+					strlcpy(cmdbuf, argbuf, screen_width);
 			}
 			free(argbuf);
 		}
@@ -1087,10 +1084,7 @@ format_next_process(struct handle * xhandle, char *(*get_userid)(int), int flags
 		sbuf_printf(procbuf, "%6s ", format_time(cputime));
 		sbuf_printf(procbuf, "%6.2f%% ", ps.wcpu ? 100.0 * weighted_cpu(PCTCPU(pp), pp) : 100.0 * PCTCPU(pp));
 	}
-	sbuf_printf(procbuf, "%.*s",
-		screen_width > cmdlengthdelta ?
-		screen_width - cmdlengthdelta : 0,
-		printable(cmdbuf));
+	sbuf_printf(procbuf, "%s", printable(cmdbuf));
 	free(cmdbuf);
 	return (sbuf_data(procbuf));
 }

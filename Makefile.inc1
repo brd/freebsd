@@ -132,7 +132,6 @@ TARGET_TRIPLE?=	${TARGET_ARCH:S/amd64/x86_64/:C/hf$//:S/mipsn32/mips64/}-${TARGE
 KNOWN_ARCHES?=	aarch64/arm64 \
 		amd64 \
 		arm \
-		armeb/arm \
 		armv6/arm \
 		armv7/arm \
 		i386 \
@@ -666,6 +665,9 @@ BSARGS= 	DESTDIR= \
 BMAKE=		\
 		${BMAKEENV} ${MAKE} ${WORLD_FLAGS} -f Makefile.inc1 \
 		${BSARGS}
+.if empty(.MAKEOVERRIDES:MMK_LLVM_TARGET_ALL)
+BMAKE+=		MK_LLVM_TARGET_ALL=no
+.endif
 
 # build-tools stage
 TMAKE=		\
@@ -685,9 +687,6 @@ TMAKE=		\
 XMAKE=		${BMAKE} \
 		TARGET=${TARGET} TARGET_ARCH=${TARGET_ARCH} \
 		MK_GDB=no MK_TESTS=no
-.if empty(.MAKEOVERRIDES:MMK_LLVM_TARGET_ALL)
-XMAKE+=		MK_LLVM_TARGET_ALL=no
-.endif
 
 # kernel-tools stage
 KTMAKEENV=	INSTALL="sh ${.CURDIR}/tools/install.sh" \
@@ -1128,7 +1127,13 @@ kernel-toolchain: ${KERNEL_TOOLCHAIN_TGTS} .PHONY
 #
 installcheck: _installcheck_world _installcheck_kernel .PHONY
 _installcheck_world: .PHONY
+	@echo "--------------------------------------------------------------"
+	@echo ">>> Install check world"
+	@echo "--------------------------------------------------------------"
 _installcheck_kernel: .PHONY
+	@echo "--------------------------------------------------------------"
+	@echo ">>> Install check kernel"
+	@echo "--------------------------------------------------------------"
 
 #
 # Require DESTDIR to be set if installing for a different architecture or
@@ -1346,12 +1351,15 @@ restage reinstall: .MAKE .PHONY
 .endif
 	@echo
 	@echo "--------------------------------------------------------------"
-	@echo ">>> Installing everything"
+	@echo ">>> Installing everything started on `LC_ALL=C date`"
 	@echo "--------------------------------------------------------------"
 	${_+_}cd ${.CURDIR}; ${MAKE} -f Makefile.inc1 install
 .if defined(LIBCOMPAT)
 	${_+_}cd ${.CURDIR}; ${MAKE} -f Makefile.inc1 install${libcompat}
 .endif
+	@echo "--------------------------------------------------------------"
+	@echo ">>> Installing everything completed on `LC_ALL=C date`"
+	@echo "--------------------------------------------------------------"
 
 redistribute: .MAKE .PHONY
 	@echo "--------------------------------------------------------------"
@@ -1722,12 +1730,12 @@ create-world-package-${pkgname}: .PHONY
 		-o ${REPODIR}/$$(${PKG_CMD} -o ABI_FILE=${WSTAGEDIR}/bin/sh config ABI)/${PKG_VERSION}
 .endfor
 
-create-kernel-packages:	.PHONY
 _default_flavor=	-default
 .if make(*package*) && exists(${KSTAGEDIR}/kernel.meta)
 . if ${MK_DEBUG_FILES} != "no"
 _debug=-debug
 . endif
+create-kernel-packages:	.PHONY
 . for flavor in "" ${_debug}
 create-kernel-packages: create-kernel-packages-flavor${flavor:C,^""$,${_default_flavor},}
 create-kernel-packages-flavor${flavor:C,^""$,${_default_flavor},}: _pkgbootstrap .PHONY
@@ -1871,7 +1879,7 @@ legacy: .PHONY
 	false
 .endif
 
-.for _tool in tools/build ${_elftoolchain_libs}
+.for _tool in tools/build ${_elftoolchain_libs} lib/libnv
 	${_+_}@${ECHODIR} "===> ${_tool} (obj,includes,all,install)"; \
 	    cd ${.CURDIR}/${_tool}; \
 	    if [ -z "${NO_OBJWALK}" ]; then ${MAKE} DIRPRFX=${_tool}/ obj; fi; \
