@@ -2,8 +2,7 @@
 
 .include <src.opts.mk>
 
-FILES=	rc.firewall
-FILESDIR=	/etc
+CONFS=	rc.firewall
 PACKAGE=ipfw
 PROG=	ipfw
 SRCS=	ipfw2.c dummynet.c ipv6.c main.c nat.c tables.c
