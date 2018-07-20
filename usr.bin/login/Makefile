@@ -33,7 +33,7 @@ CAP_MKDB_ENDIAN?= -b
 afterinstallconfig:
 	cap_mkdb ${CAP_MKDB_ENDIAN} ${DESTDIR}/etc/login.conf
 .if defined(NO_ROOT) && defined(METALOG)
-	echo "./etc/login.conf.db type=file mode=0644 uname=root gname=wheel" >> ${METALOG}
+	echo "./etc/login.conf.db type=file mode=0644 uname=root gname=wheel" | cat -l >> ${METALOG}
 .endif
 
 .include <bsd.prog.mk>
