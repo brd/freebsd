@@ -167,7 +167,7 @@ SRCS+=	devname-compat11.c \
 afterinstallconfig: afterinstallconfig-passwd
 afterinstallconfig-passwd:
 	pwd_mkdb -i -p -d ${DESTDIR}/etc ${DESTDIR}/etc/master.passwd
-.if defined(NO_ROOT)
+.if defined(NO_ROOT) && defined(METALOG)
 	( \
 		echo "./etc/pwd.db type=file mode=0644 uname=root gname=wheel"; \
 		echo "./etc/spwd.db type=file mode=0600 uname=root gname=wheel"; \
