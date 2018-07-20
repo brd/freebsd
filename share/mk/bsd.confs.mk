@@ -27,6 +27,12 @@ all: buildconfig
 .    for group in ${CONFGROUPS}
 .      if defined(${group}) && !empty(${group})
 
+.        if !target(afterinstallconfig)
+afterinstallconfig:
+.        endif
+installconfig:	realinstallconfig afterinstallconfig
+.ORDER:		realinstallconfig afterinstallconfig
+
 ${group}OWN?=	${SHAREOWN}
 ${group}GRP?=	${SHAREGRP}
 ${group}MODE?=	${CONFMODE}
@@ -108,7 +114,7 @@ STAGE_AS_${cnf:T}= ${${group}NAME_${cnf:T}}
 STAGE_DIR.${cnf:T}= ${STAGE_OBJTOP}${${group}DIR_${cnf:T}}
 stage_as.${cnf:T}: ${cnf}
 
-installconfig: installdirs-${_${group}DIR_${cnf}} _${group}INS_${cnf:T}
+realinstallconfig: installdirs-${_${group}DIR_${cnf}} _${group}INS_${cnf:T}
 _${group}INS_${cnf:T}: ${cnf}
 	${INSTALL} ${${group}TAG_ARGS} -C -o ${${group}OWN_${cnf}} \
 	    -g ${${group}GRP_${cnf}} -m ${${group}MODE_${cnf}} \
