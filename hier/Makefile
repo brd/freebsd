@@ -13,4 +13,7 @@ DIRS+=	TMP
 TMP=	/tmp
 TMP_MODE=	1777
 
+DIRS+=	VAR_DB_PORTS
+VAR_DB_PORTS=	/var/db/ports
+
 .include <bsd.prog.mk>
