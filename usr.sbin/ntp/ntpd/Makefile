@@ -19,6 +19,8 @@ ETC_DIR_MODE=	700
 
 DIRS+=	VAR_DB_NTP
 VAR_DB_NTP=	/var/db/ntp
+VAR_DB_NTP_OWN=		ntpd
+VAR_DB_NTP_GRP=		ntpd
 VAR_DB_NTP_MODE=	700
 
 SRCS=	cmd_args.c ntp_config.c ntp_control.c ntp_crypto.c ntp_filegen.c \
