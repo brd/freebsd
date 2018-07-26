@@ -5,13 +5,14 @@
 
 .PATH: ${SRCTOP}/usr.bin/wall
 
+CONFGROUPS=	CONFS RCD
 CONFS=	syslog.conf
 PROG=	syslogd
 MAN=	syslog.conf.5 syslogd.8
 SRCS=	syslogd.c ttymsg.c
-FILES=	rc.d/syslogd
-FILESDIR=	/etc/rc.d
-FILESMODE=	${BINMODE}
+RCD=	rc.d/syslogd
+RCDDIR=	/etc/rc.d
+RCDMODE=	${BINMODE}
 
 LIBADD=	util
 
