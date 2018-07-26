@@ -1,7 +1,7 @@
 # $FreeBSD$
 
-FILES=		sysctl
-FILESDIR=	/etc/rc.d
-FILESMODE=	${BINMODE}
+CONFS=		sysctl
+CONFSDIR=	/etc/rc.d
+CONFSMODE=	${BINMODE}
 
 .include <bsd.prog.mk>
