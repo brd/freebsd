@@ -5,7 +5,6 @@
 
 .PATH: ${SRCTOP}/usr.sbin/pwd_mkdb ${SRCTOP}/lib/libc/gen
 
-CONFS=	shells
 PROG=	chpass
 SRCS=	chpass.c edit.c field.c pw_scan.c table.c util.c
 BINOWN=	root
