@@ -50,7 +50,9 @@
 #include <pwd.h>
 #include <grp.h>
 #include <stddef.h>
+#ifdef illumos
 #include <idmap.h>
+#endif
 
 #include <sys/dnode.h>
 #include <sys/spa.h>
@@ -785,15 +787,13 @@ typedef struct mnttab_node {
 static int
 libzfs_mnttab_cache_compare(const void *arg1, const void *arg2)
 {
-	const mnttab_node_t *mtn1 = arg1;
-	const mnttab_node_t *mtn2 = arg2;
+	const mnttab_node_t *mtn1 = (const mnttab_node_t *)arg1;
+	const mnttab_node_t *mtn2 = (const mnttab_node_t *)arg2;
 	int rv;
 
 	rv = strcmp(mtn1->mtn_mt.mnt_special, mtn2->mtn_mt.mnt_special);
 
-	if (rv == 0)
-		return (0);
-	return (rv > 0 ? 1 : -1);
+	return (AVL_ISIGN(rv));
 }
 
 void
@@ -2782,6 +2782,7 @@ zfs_prop_get(zfs_handle_t *zhp, zfs_prop_t prop, char *propbuf, size_t proplen,
 		break;
 
 	case ZFS_PROP_GUID:
+	case ZFS_PROP_CREATETXG:
 		/*
 		 * GUIDs are stored as numbers, but they are identifiers.
 		 * We don't want them to be pretty printed, because pretty
@@ -3447,7 +3448,21 @@ zfs_create_ancestors(libzfs_handle_t *hdl, const char *path)
 {
 	int prefix;
 	char *path_copy;
+	char errbuf[1024];
 	int rc = 0;
+
+	(void) snprintf(errbuf, sizeof (errbuf), dgettext(TEXT_DOMAIN,
+	    "cannot create '%s'"), path);
+
+	/*
+	 * Check that we are not passing the nesting limit
+	 * before we start creating any ancestors.
+	 */
+	if (dataset_nestcheck(path) != 0) {
+		zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
+		    "maximum name nesting depth exceeded"));
+		return (zfs_error(hdl, EZFS_INVALIDNAME, errbuf));
+	}
 
 	if (check_parents(hdl, path, NULL, B_TRUE, &prefix) != 0)
 		return (-1);
@@ -3483,6 +3498,12 @@ zfs_create(libzfs_handle_t *hdl, const char *path, zfs_type_t type,
 	/* validate the path, taking care to note the extended error message */
 	if (!zfs_validate_name(hdl, path, type, B_TRUE))
 		return (zfs_error(hdl, EZFS_INVALIDNAME, errbuf));
+
+	if (dataset_nestcheck(path) != 0) {
+		zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
+		    "maximum name nesting depth exceeded"));
+		return (zfs_error(hdl, EZFS_INVALIDNAME, errbuf));
+	}
 
 	/* validate parents exist */
 	if (check_parents(hdl, path, &zoned, B_FALSE, NULL) != 0)
@@ -3915,12 +3936,24 @@ zfs_remap_indirects(libzfs_handle_t *hdl, const char *fs)
 	char errbuf[1024];
 
 	(void) snprintf(errbuf, sizeof (errbuf), dgettext(TEXT_DOMAIN,
-	    "cannot remap filesystem '%s' "), fs);
+	    "cannot remap dataset '%s'"), fs);
 
 	err = lzc_remap(fs);
 
 	if (err != 0) {
-		(void) zfs_standard_error(hdl, err, errbuf);
+		switch (err) {
+		case ENOTSUP:
+			zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
+			    "pool must be upgraded"));
+			(void) zfs_error(hdl, EZFS_BADVERSION, errbuf);
+			break;
+		case EINVAL:
+			(void) zfs_error(hdl, EZFS_BADTYPE, errbuf);
+			break;
+		default:
+			(void) zfs_standard_error(hdl, err, errbuf);
+			break;
+		}
 	}
 
 	return (err);
@@ -4272,6 +4305,7 @@ zfs_rename(zfs_handle_t *zhp, const char *source, const char *target,
 				    errbuf));
 			}
 		}
+
 		if (!zfs_validate_name(hdl, target, zhp->zfs_type, B_TRUE))
 			return (zfs_error(hdl, EZFS_INVALIDNAME, errbuf));
 	} else {

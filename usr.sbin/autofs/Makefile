@@ -33,4 +33,6 @@ LINKS+=	${BINDIR}/automountd ${BINDIR}/autounmountd
 
 .PATH:	${MOUNT}
 
+SUBDIR=	autofs
+
 .include <bsd.prog.mk>

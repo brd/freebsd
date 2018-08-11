@@ -360,6 +360,8 @@ struct spa {
 	uint64_t	spa_feat_for_read_obj;	/* required to read from pool */
 	uint64_t	spa_feat_desc_obj;	/* Feature descriptions */
 	uint64_t	spa_feat_enabled_txg_obj; /* Feature enabled txg */
+	kmutex_t	spa_feat_stats_lock;	/* protects spa_feat_stats */
+	nvlist_t	*spa_feat_stats;	/* Cache of enabled features */
 	/* cache feature refcounts */
 	uint64_t	spa_feat_refcount_cache[SPA_FEATURES];
 #ifdef illumos
@@ -388,6 +390,10 @@ struct spa {
 		int spa_queued;
 	} spa_queue_stats[ZIO_PRIORITY_NUM_QUEUEABLE];
 #endif
+	/* arc_memory_throttle() parameters during low memory condition */
+	uint64_t	spa_lowmem_page_load;	/* memory load during txg */
+	uint64_t	spa_lowmem_last_txg;	/* txg window start */
+
 	hrtime_t	spa_ccw_fail_time;	/* Conf cache write fail time */
 
 	/*

@@ -10,6 +10,7 @@ RCDDIR=	/etc/rc.d
 RCDMODE=     ${BINMODE}
 MAN=	newsyslog.8 newsyslog.conf.5
 SRCS=	newsyslog.c ptimes.c
+LIBADD=	sbuf
 
 HAS_TESTS=
 SUBDIR.${MK_TESTS}+= tests
