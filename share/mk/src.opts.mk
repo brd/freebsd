@@ -130,6 +130,7 @@ __DEFAULT_YES_OPTIONS = \
     LIBTHR \
     LLVM_COV \
     LOADER_GELI \
+    LOADER_LUA \
     LOADER_OFW \
     LOADER_UBOOT \
     LOCALES \
@@ -158,6 +159,7 @@ __DEFAULT_YES_OPTIONS = \
     QUOTAS \
     RADIUS_SUPPORT \
     RBOOTD \
+    REPRODUCIBLE_BUILD \
     RESCUE \
     ROUTED \
     SENDMAIL \
@@ -197,11 +199,9 @@ __DEFAULT_NO_OPTIONS = \
     LIBSOFT \
     LOADER_FIREWIRE \
     LOADER_FORCE_LE \
-    LOADER_LUA \
     NAND \
     OFED_EXTRA \
     OPENLDAP \
-    REPRODUCIBLE_BUILD \
     RPCBIND_WARMSTART_SUPPORT \
     SHARED_TOOLCHAIN \
     SORT_THREADS \
@@ -311,9 +311,9 @@ __DEFAULT_YES_OPTIONS+=LLVM_LIBUNWIND
 .else
 __DEFAULT_NO_OPTIONS+=LLVM_LIBUNWIND
 .endif
-.if ${__T} == "aarch64" || ${__T} == "amd64"
+.if ${__T} == "aarch64" || ${__T} == "amd64" || ${__T} == "armv7"
 __DEFAULT_YES_OPTIONS+=LLD_BOOTSTRAP LLD_IS_LD
-.elif ${__T} == "armv7" || ${__T} == "i386"
+.elif ${__T} == "i386"
 __DEFAULT_YES_OPTIONS+=LLD_BOOTSTRAP
 __DEFAULT_NO_OPTIONS+=LLD_IS_LD
 .else
@@ -353,6 +353,11 @@ BROKEN_OPTIONS+=LOADER_OFW
 # UBOOT is only for arm, mips and powerpc, exclude others
 .if ${__T:Marm*} == "" && ${__T:Mmips*} == "" && ${__T:Mpowerpc*} == ""
 BROKEN_OPTIONS+=LOADER_UBOOT
+.endif
+# GELI and Lua in loader currently cause boot failures on sparc64.
+# Further debugging is required.
+.if ${__T} == "sparc64"
+BROKEN_OPTIONS+=LOADER_GELI LOADER_LUA
 .endif
 
 .if ${__T:Mmips64*}

@@ -2,6 +2,7 @@
 
 .include <src.opts.mk>
 
+CONFS=	newsyslog.conf
 PROG=	newsyslog
 CONFGROUPS=	CONFS RCD
 CONFS=	newsyslog.conf

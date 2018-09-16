@@ -9,6 +9,9 @@ FILES=		protocols
 FILESDIR=	ETC_BLUETOOTH
 FILESMODE=	444
 PACKAGE=	lib${LIB}
+CONFS=		hosts protocols
+CONFSDIR=	/etc/bluetooth
+CONFSMODE_protocols=	444
 LIB=		bluetooth
 MAN=		bluetooth.3
 

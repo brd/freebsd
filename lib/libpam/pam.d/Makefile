@@ -4,9 +4,8 @@
 
 NO_OBJ=
 
-FILESGROUPS=	FILES
-
-FILES=	README \
+CONFGROUPS=	CONFS
+CONFS=	README \
 	cron \
 	imap \
 	login \
@@ -15,25 +14,28 @@ FILES=	README \
 	sshd su system \
 	xdm
 
-FILESDIR=	/etc/pam.d
-FILESMODE=	644
+CONFDIR=	/etc/pam.d
+CONFSMODE_README=	444
 
 .if ${MK_AT} != "no"
-FILES+=		atrun
-PACKAGE_atrun=	at
+CONFGROUPS+=	AT
+AT+=	atrun
+ATPACKAGE+=	at
 .endif
 
 .if ${MK_FTP} != "no"
-FILES+=		ftpd
-PACKAGE_ftpd=	ftp
-LINKS=	${FILESDIR}/ftpd ${FILESDIR}/ftp
+CONFGROUPS+=	FTP
+FTP+=	ftpd
+FTPPACKAGE+=	ftp
+
+afterinstallconfig:
+	${INSTALL_LINK} ${TAG_ARGS} ${DESTDIR}${CONFDIR}/ftpd ${DESTDIR}${CONFDIR}/ftp
 .endif
 
 .if ${MK_TELNET} != "no"
-FILES+=		telnetd
-PACKAGE_telnetd=telnet
+CONFGROUPS+=	TELNET
+TELNET+=	telnetd
+TELNETPACKAGE+=	telnet
 .endif
-
-FILESMODE_README=	444
 
 .include <bsd.prog.mk>

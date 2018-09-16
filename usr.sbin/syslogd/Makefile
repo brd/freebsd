@@ -5,7 +5,7 @@
 
 .PATH: ${SRCTOP}/usr.bin/wall
 
-CONFGROUPS=	CONFS RCD
+CONFGROUPS=	CONFS SYSLOGD_D
 CONFS=	syslog.conf
 PROG=	syslogd
 MAN=	syslog.conf.5 syslogd.8
@@ -21,6 +21,20 @@ CFLAGS+= -DINET
 .endif
 .if ${MK_INET6_SUPPORT} != "no"
 CFLAGS+= -DINET6
+.endif
+
+SYSLOGD_D=
+SYSLOGD_DDIR=	/etc/syslog.d
+.if ${MK_FTP} != "no"
+SYSLOGD_D+=	ftp.conf
+.endif
+
+.if ${MK_LPR} != "no"
+SYSLOGD_D+=	lpr.conf
+.endif
+
+.if ${MK_PPP} != "no"
+SYSLOGD_D+=	ppp.conf
 .endif
 
 CFLAGS+= -I${SRCTOP}/usr.bin/wall

@@ -17,6 +17,8 @@ SRCS+=	__getosreldate.c \
 	_thread_init.c \
 	alarm.c \
 	arc4random.c \
+	arc4random-compat.c \
+	arc4random_uniform.c \
 	assert.c \
 	auxv.c \
 	basename.c \
@@ -166,16 +168,7 @@ SRCS+=	devname-compat11.c \
 	unvis-compat.c
 .endif
 
-afterinstallconfig: afterinstallconfig-passwd
-afterinstallconfig-passwd:
-	pwd_mkdb -i -p -d ${DESTDIR}/etc ${DESTDIR}/etc/master.passwd
-.if defined(NO_ROOT) && defined(METALOG)
-	( \
-		echo "./etc/pwd.db type=file mode=0644 uname=root gname=wheel"; \
-		echo "./etc/spwd.db type=file mode=0600 uname=root gname=wheel"; \
-		echo "./etc/passwd type=file mode=0644 uname=root gname=wheel"; \
-	) | cat -l >> ${METALOG}
-.endif
+CFLAGS.arc4random.c= -I${SRCTOP}/sys -I${SRCTOP}/sys/crypto/chacha20
 
 .PATH: ${SRCTOP}/contrib/libc-pwcache
 SRCS+=	pwcache.c pwcache.h
@@ -327,9 +320,7 @@ MAN+=	alarm.3 \
 	vis.3 \
 	wordexp.3
 
-MLINKS+=arc4random.3 arc4random_addrandom.3 \
-	arc4random.3 arc4random_stir.3 \
-	arc4random.3 arc4random_buf.3 \
+MLINKS+=arc4random.3 arc4random_buf.3 \
 	arc4random.3 arc4random_uniform.3
 MLINKS+=ctermid.3 ctermid_r.3
 MLINKS+=devname.3 devname_r.3
@@ -555,7 +546,15 @@ VAR_EMPTY=	/var/empty
 VAR_EMPTY_MODE=	555
 VAR_EMPTY_FLAGS=schg
 
-distribution: installconfig
+afterinstallconfig:
 .if ${MK_TCSH} != "no"
 	sed -i "" -e 's;/bin/sh;/bin/csh;' ${DESTDIR}/etc/master.passwd
+.endif
+	pwd_mkdb -i -p -d ${DESTDIR}/etc ${DESTDIR}/etc/master.passwd
+.if defined(NO_ROOT) && defined(METALOG)
+	( \
+		echo "./etc/pwd.db type=file mode=0644 uname=root gname=wheel"; \
+		echo "./etc/spwd.db type=file mode=0600 uname=root gname=wheel"; \
+		echo "./etc/passwd type=file mode=0644 uname=root gname=wheel"; \
+	) | cat -l >> ${METALOG}
 .endif

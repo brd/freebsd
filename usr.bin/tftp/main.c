@@ -184,7 +184,7 @@ main(int argc, char *argv[])
 
 	acting_as_client = 1;
 	peer = -1;
-	strcpy(mode, "netascii");
+	strcpy(mode, "octet");
 	signal(SIGINT, intr);
 
 	interactive = isatty(STDIN_FILENO);
@@ -499,6 +499,7 @@ put(int argc, char *argv[])
 			printf("putting %s to %s:%s [%s]\n",
 			    cp, hostname, targ, mode);
 		xmitfile(peer, port, fd, targ, mode);
+		close(fd);
 		return;
 	}
 				/* this assumes the target is a directory */
