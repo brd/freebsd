@@ -341,16 +341,19 @@
 #define EM_MSIX_LINK		0x01000000 /* For 82574 use */
 #define ETH_ZLEN		60
 #define ETH_ADDR_LEN		6
-#define EM_CSUM_OFFLOAD		7	/* Offload bits in mbuf flag */
-#define IGB_CSUM_OFFLOAD	0x0E0F	/* Offload bits in mbuf flag */
+#define EM_CSUM_OFFLOAD		(CSUM_IP | CSUM_IP_UDP | CSUM_IP_TCP) /* Offload bits in mbuf flag */
+#define IGB_CSUM_OFFLOAD	(CSUM_IP | CSUM_IP_UDP | CSUM_IP_TCP | \
+				 CSUM_IP_SCTP | CSUM_IP6_UDP | CSUM_IP6_TCP | \
+				 CSUM_IP6_SCTP)	/* Offload bits in mbuf flag */
+
 
 #define IGB_PKTTYPE_MASK	0x0000FFF0
 #define IGB_DMCTLX_DCFLUSH_DIS	0x80000000  /* Disable DMA Coalesce Flush */
 
 /*
  * 82574 has a nonstandard address for EIAC
- * and since its only used in MSIX, and in
- * the em driver only 82574 uses MSIX we can
+ * and since its only used in MSI-X, and in
+ * the em driver only 82574 uses MSI-X we can
  * solve it just using this define.
  */
 #define EM_EIAC 0x000DC
@@ -465,7 +468,6 @@ struct adapter {
 	struct resource *memory;
 	struct resource *flash;
 	struct resource	*ioport;
-	int		io_rid;
 
 	struct resource	*res;
 	void		*tag;

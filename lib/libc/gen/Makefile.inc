@@ -340,7 +340,8 @@ MLINKS+=dlopen.3 fdlopen.3 \
 	dlopen.3 dlclose.3 \
 	dlopen.3 dlerror.3 \
 	dlopen.3 dlfunc.3 \
-	dlopen.3 dlsym.3
+	dlopen.3 dlsym.3 \
+	dlopen.3 dlvsym.3
 MLINKS+=err.3 err_set_exit.3 \
 	err.3 err_set_file.3 \
 	err.3 errc.3 \
@@ -490,6 +491,7 @@ MLINKS+=setjmp.3 _longjmp.3 \
 	setjmp.3 siglongjmp.3 \
 	setjmp.3 sigsetjmp.3
 MLINKS+=setmode.3 getmode.3
+MLINKS+=setproctitle.3 setproctitle_fast.3
 MLINKS+=sigsetops.3 sigaddset.3 \
 	sigsetops.3 sigdelset.3 \
 	sigsetops.3 sigemptyset.3 \

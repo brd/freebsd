@@ -12,6 +12,7 @@ SUBDIR=	${_atf} \
 	${_makewhatis.local} \
 	${_mknetid} \
 	${_pppoed} \
+	rc \
 	revnetgroup \
 	${_rlogind} \
 	rpc.rquotad \

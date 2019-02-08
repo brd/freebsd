@@ -2813,7 +2813,7 @@ ena_xmit_mbuf(struct ena_ring *tx_ring, struct mbuf **mbuf)
 	/* Prepare the packet's descriptors and send them to device */
 	rc = ena_com_prepare_tx(io_sq, &ena_tx_ctx, &nb_hw_desc);
 	if (unlikely(rc != 0)) {
-		device_printf(adapter->pdev, "failed to prepare tx bufs\n");
+		ena_trace(ENA_DBG | ENA_TXPTH, "failed to prepare tx bufs\n");
 		counter_u64_add(tx_ring->tx_stats.prepare_ctx_err, 1);
 		goto dma_error;
 	}
@@ -3948,7 +3948,7 @@ static driver_t ena_driver = {
 devclass_t ena_devclass;
 DRIVER_MODULE(ena, pci, ena_driver, ena_devclass, 0, 0);
 MODULE_PNP_INFO("U16:vendor;U16:device", pci, ena, ena_vendor_info_array,
-    sizeof(ena_vendor_info_array[0]), nitems(ena_vendor_info_array) - 1);
+    nitems(ena_vendor_info_array) - 1);
 MODULE_DEPEND(ena, pci, 1, 1, 1);
 MODULE_DEPEND(ena, ether, 1, 1, 1);
 

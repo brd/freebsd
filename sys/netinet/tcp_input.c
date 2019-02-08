@@ -371,31 +371,14 @@ cc_conn_init(struct tcpcb *tp)
 	/*
 	 * Set the initial slow-start flight size.
 	 *
-	 * RFC5681 Section 3.1 specifies the default conservative values.
-	 * RFC3390 specifies slightly more aggressive values.
-	 * RFC6928 increases it to ten segments.
-	 * Support for user specified value for initial flight size.
-	 *
 	 * If a SYN or SYN/ACK was lost and retransmitted, we have to
 	 * reduce the initial CWND to one segment as congestion is likely
 	 * requiring us to be cautious.
 	 */
 	if (tp->snd_cwnd == 1)
 		tp->snd_cwnd = maxseg;		/* SYN(-ACK) lost */
-	else if (V_tcp_initcwnd_segments)
-		tp->snd_cwnd = min(V_tcp_initcwnd_segments * maxseg,
-		    max(2 * maxseg, V_tcp_initcwnd_segments * 1460));
-	else if (V_tcp_do_rfc3390)
-		tp->snd_cwnd = min(4 * maxseg, max(2 * maxseg, 4380));
-	else {
-		/* Per RFC5681 Section 3.1 */
-		if (maxseg > 2190)
-			tp->snd_cwnd = 2 * maxseg;
-		else if (maxseg > 1095)
-			tp->snd_cwnd = 3 * maxseg;
-		else
-			tp->snd_cwnd = 4 * maxseg;
-	}
+	else
+		tp->snd_cwnd = tcp_compute_initwnd(maxseg);
 
 	if (CC_ALGO(tp)->conn_init != NULL)
 		CC_ALGO(tp)->conn_init(tp->ccv);
@@ -800,7 +783,7 @@ findpcb:
 	if (ti_locked == TI_RLOCKED) {
 		INP_INFO_RLOCK_ASSERT(&V_tcbinfo);
 	} else {
-		INP_INFO_UNLOCK_ASSERT(&V_tcbinfo);
+		INP_INFO_WUNLOCK_ASSERT(&V_tcbinfo);
 	}
 #endif
 #ifdef INET6
@@ -1165,7 +1148,7 @@ tfo_socket_result:
 		 * causes.
 		 */
 		if (thflags & TH_RST) {
-			syncache_chkrst(&inc, th);
+			syncache_chkrst(&inc, th, m);
 			goto dropunlock;
 		}
 		/*
@@ -1358,7 +1341,7 @@ tfo_socket_result:
 			INP_INFO_RUNLOCK_ET(&V_tcbinfo, et);
 			ti_locked = TI_UNLOCKED;
 		}
-		INP_INFO_UNLOCK_ASSERT(&V_tcbinfo);
+		INP_INFO_WUNLOCK_ASSERT(&V_tcbinfo);
 		return (IPPROTO_DONE);
 	} else if (tp->t_state == TCPS_LISTEN) {
 		/*
@@ -1405,7 +1388,7 @@ dropwithreset:
 	else {
 		KASSERT(ti_locked == TI_UNLOCKED, ("%s: dropwithreset "
 		    "ti_locked: %d", __func__, ti_locked));
-		INP_INFO_UNLOCK_ASSERT(&V_tcbinfo);
+		INP_INFO_WUNLOCK_ASSERT(&V_tcbinfo);
 	}
 #endif
 
@@ -1429,7 +1412,7 @@ dropunlock:
 	else {
 		KASSERT(ti_locked == TI_UNLOCKED, ("%s: dropunlock "
 		    "ti_locked: %d", __func__, ti_locked));
-		INP_INFO_UNLOCK_ASSERT(&V_tcbinfo);
+		INP_INFO_WUNLOCK_ASSERT(&V_tcbinfo);
 	}
 #endif
 
@@ -1437,7 +1420,7 @@ dropunlock:
 		INP_WUNLOCK(inp);
 
 drop:
-	INP_INFO_UNLOCK_ASSERT(&V_tcbinfo);
+	INP_INFO_WUNLOCK_ASSERT(&V_tcbinfo);
 	if (s != NULL)
 		free(s, M_TCPLOG);
 	if (m != NULL)
@@ -2027,7 +2010,8 @@ tcp_do_segment(struct mbuf *m, struct tcphdr *th, struct socket *so,
 			else
 				tp->t_flags |= TF_ACKNOW;
 
-			if ((thflags & TH_ECE) && V_tcp_do_ecn) {
+			if (((thflags & (TH_CWR | TH_ECE)) == TH_ECE) &&
+			    V_tcp_do_ecn) {
 				tp->t_flags |= TF_ECN_PERMIT;
 				TCPSTAT_INC(tcps_ecn_shs);
 			}
@@ -2401,8 +2385,8 @@ tcp_do_segment(struct mbuf *m, struct tcphdr *th, struct socket *so,
 		if ((tp->t_flags & (TF_RCVD_SCALE|TF_REQ_SCALE)) ==
 			(TF_RCVD_SCALE|TF_REQ_SCALE)) {
 			tp->rcv_scale = tp->request_r_scale;
-			tp->snd_wnd = tiwin;
 		}
+		tp->snd_wnd = tiwin;
 		/*
 		 * Make transitions:
 		 *      SYN-RECEIVED  -> ESTABLISHED
@@ -3817,4 +3801,31 @@ tcp_compute_pipe(struct tcpcb *tp)
 	return (tp->snd_max - tp->snd_una +
 		tp->sackhint.sack_bytes_rexmit -
 		tp->sackhint.sacked_bytes);
+}
+
+uint32_t
+tcp_compute_initwnd(uint32_t maxseg)
+{
+	/*
+	 * Calculate the Initial Window, also used as Restart Window
+	 *
+	 * RFC5681 Section 3.1 specifies the default conservative values.
+	 * RFC3390 specifies slightly more aggressive values.
+	 * RFC6928 increases it to ten segments.
+	 * Support for user specified value for initial flight size.
+	 */
+	if (V_tcp_initcwnd_segments)
+		return min(V_tcp_initcwnd_segments * maxseg,
+		    max(2 * maxseg, V_tcp_initcwnd_segments * 1460));
+	else if (V_tcp_do_rfc3390)
+		return min(4 * maxseg, max(2 * maxseg, 4380));
+	else {
+		/* Per RFC5681 Section 3.1 */
+		if (maxseg > 2190)
+			return (2 * maxseg);
+		else if (maxseg > 1095)
+			return (3 * maxseg);
+		else
+			return (4 * maxseg);
+	}
 }

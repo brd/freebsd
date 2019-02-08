@@ -10,6 +10,7 @@
 
 .PATH:	${SRCTOP}/contrib/amd/amd
 
+CONFS=	amd.map
 PROG=	amd
 MAN=	amd.8
 CONFS=	amd.map

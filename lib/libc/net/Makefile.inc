@@ -4,6 +4,7 @@
 # machine-independent net sources
 .PATH: ${LIBC_SRCTOP}/net
 
+CONFS+=	net/hosts net/hosts.equiv net/networks net/nsswitch.conf net/protocols
 SRCS+=	base64.c ether_addr.c eui64.c \
 	gai_strerror.c getaddrinfo.c \
 	gethostbydns.c gethostbyht.c gethostbynis.c gethostnamadr.c \
@@ -123,10 +124,8 @@ SRCS+=	hesiod.c
 MAN+=	hesiod.3
 .endif
 
-CONFS+=	net/hosts net/hosts.equiv net/networks nsswitch.conf protocols
-
-distribution:
 .if ${MK_NIS} == "no"
+afterinstallconfig:
 	sed -i "" -e 's/.*_compat:/# &/' -e 's/compat$$/files/' \
 		${DESTDIR}/etc/nsswitch.conf
 .endif

@@ -1,6 +1,5 @@
 /*-
  * Copyright (c) 2017 Netflix, Inc.
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -2413,12 +2412,19 @@ UefiDevicePathLibConvertDevicePathToText (
   }
 }
 
-
 ssize_t
 efidp_format_device_path(char *buf, size_t len, const_efidp dp, ssize_t max)
 {
 	char *str;
 	ssize_t retval;
+
+	/*
+	 * Basic sanity check on the device path.
+	 */
+	if (!IsDevicePathValid((CONST EFI_DEVICE_PATH_PROTOCOL *) dp, max)) {
+		*buf = '\0';
+		return 0;
+	}
 
 	str = UefiDevicePathLibConvertDevicePathToText (
 		__DECONST(EFI_DEVICE_PATH_PROTOCOL *, dp), FALSE, TRUE);

@@ -31,6 +31,7 @@
 #				explicitly to remcap.c if not 1024
 #	CONNECT			enable ~C command (connect pgm to remote)
 
+CONFS=	phones remote
 PROG=	tip
 CONFS=	phones remote
 LINKS=	${BINDIR}/tip ${BINDIR}/cu
@@ -47,6 +48,9 @@ SRCS=	acu.c acutab.c cmds.c cmdtab.c cu.c hunt.c log.c partab.c \
 # -- remote.o depends on the Makefile because of DEFBR and DEFFS
 # -- log.o depends on the Makefile because of ACULOG
 acutab.o log.o remote.o: Makefile
+
+# Don't rebuild based on remote.c
+remote: .MADE
 
 .include <bsd.prog.mk>
 

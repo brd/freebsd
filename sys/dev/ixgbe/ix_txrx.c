@@ -131,7 +131,7 @@ ixgbe_tx_ctx_setup(struct ixgbe_adv_tx_context_desc *TXD, if_pkt_info_t pi)
 
 	switch (pi->ipi_ipproto) {
 	case IPPROTO_TCP:
-		if (pi->ipi_csum_flags & (CSUM_IP_TCP | CSUM_IP6_TCP))
+		if (pi->ipi_csum_flags & (CSUM_IP_TCP | CSUM_IP6_TCP | CSUM_TSO))
 			type_tucmd_mlhl |= IXGBE_ADVTXD_TUCMD_L4T_TCP;
 		else
 			offload = FALSE;
@@ -285,15 +285,22 @@ ixgbe_isc_txd_credits_update(void *arg, uint16_t txqid, bool clear)
 	status = txr->tx_base[cur].wb.status;
 	updated = !!(status & IXGBE_TXD_STAT_DD);
 
-	if (clear == false || updated == 0)
-		return (updated);
+	if (!updated)
+		return (0);
+
+	/* If clear is false just let caller know that there
+	 * are descriptors to reclaim */
+	if (!clear)
+		return (1);
 
 	prev = txr->tx_cidx_processed;
 	ntxd = scctx->isc_ntxd[0];
 	do {
+		MPASS(prev != cur);
 		delta = (int32_t)cur - (int32_t)prev;
 		if (delta < 0)
 			delta += ntxd;
+		MPASS(delta > 0);
 
 		processed += delta;
 		prev = cur;
@@ -362,17 +369,8 @@ ixgbe_isc_rxd_available(void *arg, uint16_t qsidx, qidx_t pidx, qidx_t budget)
 	u32                      staterr;
 	int                      cnt, i, nrxd;
 
-	if (budget == 1) {
-		rxd = &rxr->rx_base[pidx];
-		staterr = le32toh(rxd->wb.upper.status_error);
-
-		return (staterr & IXGBE_RXD_STAT_DD);
-	}
-
 	nrxd = sc->shared->isc_nrxd[0];
-	// em has cnt < nrxd. off by 1 here or there?
-//	for (cnt = 0, i = pidx; cnt < nrxd && cnt <= budget;) {
-	for (cnt = 0, i = pidx; cnt < nrxd-1 && cnt <= budget;) {
+	for (cnt = 0, i = pidx; cnt < nrxd && cnt <= budget;) {
 		rxd = &rxr->rx_base[i];
 		staterr = le32toh(rxd->wb.upper.status_error);
 
@@ -383,7 +381,6 @@ ixgbe_isc_rxd_available(void *arg, uint16_t qsidx, qidx_t pidx, qidx_t budget)
 		if (staterr & IXGBE_RXD_STAT_EOP)
 			cnt++;
 	}
-
 	return (cnt);
 } /* ixgbe_isc_rxd_available */
 

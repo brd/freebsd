@@ -1,7 +1,7 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
  *
- * Copyright (c) 2001 M. Warner Losh.  All rights reserved.
+ * Copyright (c) 2001 M. Warner Losh.
  * Copyright (c) 2003 Norikatsu Shigemura, Takenori Watanabe All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -103,4 +103,4 @@ uart_pccard_attach(device_t dev)
 
 DRIVER_MODULE(uart, pccard, uart_pccard_driver, uart_devclass, 0, 0);
 MODULE_PNP_INFO("U32:function_type;", pccard, uart, &uart_pccard_function,
-    sizeof(uart_pccard_function), 1);
+    1);

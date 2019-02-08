@@ -69,6 +69,9 @@ typedef struct if_rxd_frag {
 	uint16_t irf_len;
 } *if_rxd_frag_t;
 
+/* bnxt supports 64 with hardware LRO enabled */
+#define IFLIB_MAX_RX_SEGS		64
+
 typedef struct if_rxd_info {
 	/* set by iflib */
 	uint16_t iri_qsidx;		/* qset index */
@@ -173,7 +176,7 @@ typedef struct pci_vendor_info {
 #define IFLIB_PNP_DESCR "U32:vendor;U32:device;U32:subvendor;U32:subdevice;" \
     "U32:revision;U32:class;D:#"
 #define IFLIB_PNP_INFO(b, u, t) \
-    MODULE_PNP_INFO(IFLIB_PNP_DESCR, b, u, t, sizeof(t[0]), nitems(t) - 1)
+    MODULE_PNP_INFO(IFLIB_PNP_DESCR, b, u, t, nitems(t) - 1)
 
 typedef struct if_txrx {
 	int (*ift_txd_encap) (void *, if_pkt_info_t);
@@ -246,7 +249,7 @@ struct if_shared_ctx {
 	/* fields necessary for probe */
 	pci_vendor_info_t *isc_vendor_info;
 	char *isc_driver_version;
-/* optional function to transform the read values to match the table*/
+	/* optional function to transform the read values to match the table*/
 	void (*isc_parse_devinfo) (uint16_t *device_id, uint16_t *subvendor_id,
 				   uint16_t *subdevice_id, uint16_t *rev_id);
 	int isc_nrxd_min[8];
@@ -375,6 +378,8 @@ if_softc_ctx_t iflib_get_softc_ctx(if_ctx_t ctx);
 if_shared_ctx_t iflib_get_sctx(if_ctx_t ctx);
 
 void iflib_set_mac(if_ctx_t ctx, uint8_t mac[ETHER_ADDR_LEN]);
+void iflib_request_reset(if_ctx_t ctx);
+uint8_t iflib_in_detach(if_ctx_t ctx);
 
 /*
  * If the driver can plug cleanly in to newbus use these
@@ -426,6 +431,7 @@ void iflib_iov_intr_deferred(if_ctx_t ctx);
 void iflib_link_state_change(if_ctx_t ctx, int linkstate, uint64_t baudrate);
 
 int iflib_dma_alloc(if_ctx_t ctx, int size, iflib_dma_info_t dma, int mapflags);
+int iflib_dma_alloc_align(if_ctx_t ctx, int size, int align, iflib_dma_info_t dma, int mapflags);
 void iflib_dma_free(iflib_dma_info_t dma);
 
 int iflib_dma_alloc_multi(if_ctx_t ctx, int *sizes, iflib_dma_info_t *dmalist, int mapflags, int count);

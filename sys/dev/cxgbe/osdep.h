@@ -42,10 +42,14 @@
 #include <sys/syslog.h>
 #include <dev/pci/pcireg.h>
 
-#define CH_ERR(adap, fmt, ...) log(LOG_ERR, fmt, ##__VA_ARGS__)
-#define CH_WARN(adap, fmt, ...) log(LOG_WARNING, fmt, ##__VA_ARGS__)
-#define CH_ALERT(adap, fmt, ...) log(LOG_ALERT, fmt, ##__VA_ARGS__)
-#define CH_WARN_RATELIMIT(adap, fmt, ...) log(LOG_WARNING, fmt, ##__VA_ARGS__)
+#define CH_ERR(adap, fmt, ...) log(LOG_ERR, "%s: " fmt, \
+    device_get_nameunit(adap->dev), ##__VA_ARGS__)
+#define CH_WARN(adap, fmt, ...) log(LOG_WARNING, "%s: " fmt, \
+    device_get_nameunit(adap->dev), ##__VA_ARGS__)
+#define CH_ALERT(adap, fmt, ...) log(LOG_ALERT, "%s: " fmt, \
+    device_get_nameunit(adap->dev), ##__VA_ARGS__)
+#define CH_WARN_RATELIMIT(adap, fmt, ...) log(LOG_WARNING, "%s: " fmt, \
+    device_get_nameunit(adap->dev), ##__VA_ARGS__)
 
 #ifndef LINUX_TYPES_DEFINED
 typedef int8_t  s8;
@@ -108,6 +112,7 @@ typedef boolean_t bool;
 
 #define DUPLEX_HALF	0
 #define DUPLEX_FULL	1
+#define AUTONEG_AUTO	(-1)
 #define AUTONEG_DISABLE	0
 #define AUTONEG_ENABLE	1
 

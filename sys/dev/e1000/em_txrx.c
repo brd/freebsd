@@ -446,16 +446,22 @@ em_isc_txd_credits_update(void *arg, uint16_t txqid, bool clear)
 	status = txr->tx_base[cur].upper.fields.status;
 	updated = !!(status & E1000_TXD_STAT_DD);
 
-	if (clear == false || updated == 0)
-		return (updated);
+	if (!updated)
+		return (0);
+
+	/* If clear is false just let caller know that there
+	 * are descriptors to reclaim */
+	if (!clear)
+		return (1);
 
 	prev = txr->tx_cidx_processed;
 	ntxd = scctx->isc_ntxd[0];
 	do {
+		MPASS(prev != cur);
 		delta = (int32_t)cur - (int32_t)prev;
-		MPASS(prev == 0 || delta != 0);
 		if (delta < 0)
 			delta += ntxd;
+		MPASS(delta > 0);
 		DPRINTF(iflib_get_dev(adapter->ctx),
 			      "%s: cidx_processed=%u cur=%u clear=%d delta=%d\n",
 			      __FUNCTION__, prev, cur, clear, delta);
@@ -553,22 +559,14 @@ lem_isc_rxd_available(void *arg, uint16_t rxqid, qidx_t idx, qidx_t budget)
 	u32 staterr = 0;
 	int cnt, i;
 
-	if (budget == 1) {
-		rxd = (struct e1000_rx_desc *)&rxr->rx_base[idx];
-		staterr = rxd->status;
-		return (staterr & E1000_RXD_STAT_DD);
-	}
-
 	for (cnt = 0, i = idx; cnt < scctx->isc_nrxd[0] && cnt <= budget;) {
 		rxd = (struct e1000_rx_desc *)&rxr->rx_base[i];
 		staterr = rxd->status;
 
 		if ((staterr & E1000_RXD_STAT_DD) == 0)
 			break;
-
 		if (++i == scctx->isc_nrxd[0])
 			i = 0;
-
 		if (staterr & E1000_RXD_STAT_EOP)
 			cnt++;
 	}
@@ -586,26 +584,16 @@ em_isc_rxd_available(void *arg, uint16_t rxqid, qidx_t idx, qidx_t budget)
 	u32 staterr = 0;
 	int cnt, i;
 
-	if (budget == 1) {
-		rxd = &rxr->rx_base[idx];
-		staterr = le32toh(rxd->wb.upper.status_error);
-		return (staterr & E1000_RXD_STAT_DD);
-	}
-
 	for (cnt = 0, i = idx; cnt < scctx->isc_nrxd[0] && cnt <= budget;) {
 		rxd = &rxr->rx_base[i];
 		staterr = le32toh(rxd->wb.upper.status_error);
 
 		if ((staterr & E1000_RXD_STAT_DD) == 0)
 			break;
-		
-		if (++i == scctx->isc_nrxd[0]) {
+		if (++i == scctx->isc_nrxd[0])
 			i = 0;
-		}
-
 		if (staterr & E1000_RXD_STAT_EOP)
 			cnt++;
-
 	}
 	return (cnt);
 }

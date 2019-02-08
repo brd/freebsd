@@ -269,7 +269,7 @@ ucode_load_ap(int cpu)
 	KASSERT(cpu_info[cpu_apic_ids[cpu]].cpu_present,
 	    ("cpu %d not present", cpu));
 
-	if (!cpu_info[cpu_apic_ids[cpu]].cpu_hyperthread)
+	if (cpu_info[cpu_apic_ids[cpu]].cpu_hyperthread)
 		return;
 #endif
 
@@ -278,12 +278,13 @@ ucode_load_ap(int cpu)
 }
 
 static void *
-map_ucode(vm_paddr_t free, size_t len)
+map_ucode(uintptr_t free, size_t len)
 {
-
 #ifdef __i386__
-	for (vm_paddr_t pa = free; pa < free + len; pa += PAGE_SIZE)
-		pmap_kenter(pa, pa);
+	uintptr_t va;
+
+	for (va = free; va < free + len; va += PAGE_SIZE)
+		pmap_kenter(va, (vm_paddr_t)va);
 #else
 	(void)len;
 #endif
@@ -291,12 +292,13 @@ map_ucode(vm_paddr_t free, size_t len)
 }
 
 static void
-unmap_ucode(vm_paddr_t free, size_t len)
+unmap_ucode(uintptr_t free, size_t len)
 {
-
 #ifdef __i386__
-	for (vm_paddr_t pa = free; pa < free + len; pa += PAGE_SIZE)
-		pmap_kremove((vm_offset_t)pa);
+	uintptr_t va;
+
+	for (va = free; va < free + len; va += PAGE_SIZE)
+		pmap_kremove(va);
 #else
 	(void)free;
 	(void)len;
@@ -355,8 +357,7 @@ ucode_load_bsp(uintptr_t free)
 		if (match != NULL) {
 			addr = map_ucode(free, len);
 			/* We can't use memcpy() before ifunc resolution. */
-			for (i = 0; i < len; i++)
-				addr[i] = ((volatile uint8_t *)match)[i];
+			memcpy_early(addr, match, len);
 			match = addr;
 
 			error = ucode_loader->load(match, false, &nrev, &orev);

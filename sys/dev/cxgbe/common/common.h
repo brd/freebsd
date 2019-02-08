@@ -34,10 +34,6 @@
 
 #include "t4_hw.h"
 
-#define GLBL_INTR_MASK (F_CIM | F_MPS | F_PL | F_PCIE | F_MC0 | F_EDC0 | \
-		F_EDC1 | F_LE | F_TP | F_MA | F_PM_TX | F_PM_RX | F_ULP_RX | \
-		F_CPL_SWITCH | F_SGE | F_ULP_TX)
-
 enum {
 	MAX_NPORTS     = 4,     /* max # of ports */
 	SERNUM_LEN     = 24,    /* Serial # length */
@@ -66,9 +62,10 @@ enum {
 };
 
 enum {
+	FEC_NONE      = 0,
 	FEC_RS        = 1 << 0,
 	FEC_BASER_RS  = 1 << 1,
-	FEC_RESERVED  = 1 << 2,
+	FEC_AUTO      = 1 << 5,		/* M_FW_PORT_CAP32_FEC + 1 */
 };
 
 enum t4_bar2_qtype { T4_BAR2_QTYPE_EGRESS, T4_BAR2_QTYPE_INGRESS };
@@ -368,6 +365,7 @@ struct adapter_params {
 	unsigned int ethoffload:1;
 	unsigned int hash_filter:1;
 	unsigned int filter2_wr_support:1;
+	unsigned int port_caps32:1;
 
 	unsigned int ofldq_wr_cred;
 	unsigned int eo_wr_cred;
@@ -409,20 +407,21 @@ struct trace_params {
 };
 
 struct link_config {
-	/* OS-specific code owns all the requested_* fields */
-	unsigned char  requested_aneg;   /* link aneg user has requested */
-	unsigned char  requested_fc;     /* flow control user has requested */
-	unsigned char  requested_fec;    /* FEC user has requested */
-	unsigned int   requested_speed;  /* speed user has requested (Mbps) */
+	/* OS-specific code owns all the requested_* fields. */
+	int8_t requested_aneg;		/* link autonegotiation */
+	int8_t requested_fc;		/* flow control */
+	int8_t requested_fec;		/* FEC */
+	u_int requested_speed;		/* speed (Mbps) */
 
-	unsigned short supported;        /* link capabilities */
-	unsigned short advertising;      /* advertised capabilities */
-	unsigned short lp_advertising;   /* peer advertised capabilities */
-	unsigned int   speed;            /* actual link speed (Mbps) */
-	unsigned char  fc;               /* actual link flow control */
-	unsigned char  fec;              /* actual FEC */
-	unsigned char  link_ok;          /* link up? */
-	unsigned char  link_down_rc;     /* link down reason */
+	uint32_t supported;		/* link capabilities */
+	uint32_t advertising;		/* advertised capabilities */
+	uint32_t lp_advertising;	/* peer advertised capabilities */
+	uint32_t fec_hint;		/* use this fec */
+	u_int speed;			/* actual link speed (Mbps) */
+	int8_t fc;			/* actual link flow control */
+	int8_t fec;			/* actual FEC */
+	bool link_ok;			/* link up? */
+	uint8_t link_down_rc;		/* link down reason */
 };
 
 #include "adapter.h"
@@ -578,7 +577,7 @@ struct fw_filter_wr;
 void t4_intr_enable(struct adapter *adapter);
 void t4_intr_disable(struct adapter *adapter);
 void t4_intr_clear(struct adapter *adapter);
-int t4_slow_intr_handler(struct adapter *adapter);
+int t4_slow_intr_handler(struct adapter *adapter, bool verbose);
 
 int t4_hash_mac_addr(const u8 *addr);
 int t4_link_l1cfg(struct adapter *adap, unsigned int mbox, unsigned int port,
@@ -602,6 +601,7 @@ int t4_flash_erase_sectors(struct adapter *adapter, int start, int end);
 int t4_flash_cfg_addr(struct adapter *adapter);
 int t4_load_cfg(struct adapter *adapter, const u8 *cfg_data, unsigned int size);
 int t4_get_fw_version(struct adapter *adapter, u32 *vers);
+int t4_get_fw_hdr(struct adapter *adapter, struct fw_hdr *hdr);
 int t4_get_bs_version(struct adapter *adapter, u32 *vers);
 int t4_get_tp_version(struct adapter *adapter, u32 *vers);
 int t4_get_exprom_version(struct adapter *adapter, u32 *vers);
@@ -617,9 +617,7 @@ int t4_init_sge_params(struct adapter *adapter);
 int t4_init_tp_params(struct adapter *adap, bool sleep_ok);
 int t4_filter_field_shift(const struct adapter *adap, int filter_sel);
 int t4_port_init(struct adapter *adap, int mbox, int pf, int vf, int port_id);
-void t4_fatal_err(struct adapter *adapter);
-void t4_db_full(struct adapter *adapter);
-void t4_db_dropped(struct adapter *adapter);
+void t4_fatal_err(struct adapter *adapter, bool fw_error);
 int t4_set_trace_filter(struct adapter *adapter, const struct trace_params *tp,
 			int filter_index, int enable);
 void t4_get_trace_filter(struct adapter *adapter, struct trace_params *tp,
@@ -733,11 +731,9 @@ int t4_fw_hello(struct adapter *adap, unsigned int mbox, unsigned int evt_mbox,
 int t4_fw_bye(struct adapter *adap, unsigned int mbox);
 int t4_fw_reset(struct adapter *adap, unsigned int mbox, int reset);
 int t4_fw_halt(struct adapter *adap, unsigned int mbox, int force);
-int t4_fw_restart(struct adapter *adap, unsigned int mbox, int reset);
+int t4_fw_restart(struct adapter *adap, unsigned int mbox);
 int t4_fw_upgrade(struct adapter *adap, unsigned int mbox,
 		  const u8 *fw_data, unsigned int size, int force);
-int t4_fw_forceinstall(struct adapter *adap, const u8 *fw_data,
-    unsigned int size);
 int t4_fw_initialize(struct adapter *adap, unsigned int mbox);
 int t4_query_params(struct adapter *adap, unsigned int mbox, unsigned int pf,
 		    unsigned int vf, unsigned int nparams, const u32 *params,
@@ -874,5 +870,16 @@ int t4vf_prep_adapter(struct adapter *adapter);
 int t4_bar2_sge_qregs(struct adapter *adapter, unsigned int qid,
 		enum t4_bar2_qtype qtype, int user, u64 *pbar2_qoffset,
 		unsigned int *pbar2_qid);
+unsigned int fwcap_to_speed(uint32_t caps);
+uint32_t speed_to_fwcap(unsigned int speed);
+uint32_t fwcap_top_speed(uint32_t caps);
+
+static inline int
+port_top_speed(const struct port_info *pi)
+{
+
+	/* Mbps -> Gbps */
+	return (fwcap_to_speed(pi->link_cfg.supported) / 1000);
+}
 
 #endif /* __CHELSIO_COMMON_H */

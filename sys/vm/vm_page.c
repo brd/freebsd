@@ -222,7 +222,8 @@ vm_page_init_cache_zones(void *dummy __unused)
 		vmd->vmd_pgcache = uma_zcache_create("vm pgcache",
 		    sizeof(struct vm_page), NULL, NULL, NULL, NULL,
 		    vm_page_import, vm_page_release, vmd,
-		    UMA_ZONE_NOBUCKETCACHE | UMA_ZONE_MAXBUCKET | UMA_ZONE_VM);
+		    UMA_ZONE_MAXBUCKET | UMA_ZONE_VM);
+		(void )uma_zone_set_maxcache(vmd->vmd_pgcache, 0);
 	}
 }
 SYSINIT(vm_page2, SI_SUB_VM_CONF, SI_ORDER_ANY, vm_page_init_cache_zones, NULL);
@@ -355,7 +356,8 @@ vm_page_blacklist_add(vm_paddr_t pa, bool verbose)
 	vm_domain_free_lock(vmd);
 	ret = vm_phys_unfree_page(m);
 	vm_domain_free_unlock(vmd);
-	if (ret) {
+	if (ret != 0) {
+		vm_domain_freecnt_inc(vmd, -1);
 		TAILQ_INSERT_TAIL(&blacklist_head, m, listq);
 		if (verbose)
 			printf("Skipping page with pa 0x%jx\n", (uintmax_t)pa);
@@ -552,6 +554,9 @@ vm_page_startup(vm_offset_t vaddr)
 	vm_paddr_t biggestsize, last_pa, pa;
 	u_long pagecount;
 	int biggestone, i, segind;
+#ifdef WITNESS
+	int witness_size;
+#endif
 #if defined(__i386__) && defined(VM_PHYSSEG_DENSE)
 	long ii;
 #endif
@@ -619,11 +624,11 @@ vm_page_startup(vm_offset_t vaddr)
 	uma_startup((void *)mapped, boot_pages);
 
 #ifdef WITNESS
-	end = new_end;
-	new_end = end - round_page(witness_startup_count());
-	mapped = pmap_map(&vaddr, new_end, end,
+	witness_size = round_page(witness_startup_count());
+	new_end -= witness_size;
+	mapped = pmap_map(&vaddr, new_end, new_end + witness_size,
 	    VM_PROT_READ | VM_PROT_WRITE);
-	bzero((void *)mapped, end - new_end);
+	bzero((void *)mapped, witness_size);
 	witness_startup((void *)mapped);
 #endif
 
@@ -655,9 +660,9 @@ vm_page_startup(vm_offset_t vaddr)
 #endif
 #if defined(__aarch64__) || defined(__amd64__) || defined(__mips__)
 	/*
-	 * Include the UMA bootstrap pages and vm_page_dump in a crash dump.
-	 * When pmap_map() uses the direct map, they are not automatically 
-	 * included.
+	 * Include the UMA bootstrap pages, witness pages and vm_page_dump
+	 * in a crash dump.  When pmap_map() uses the direct map, they are
+	 * not automatically included.
 	 */
 	for (pa = new_end; pa < end; pa += PAGE_SIZE)
 		dump_add_page(pa);
@@ -855,11 +860,6 @@ vm_page_startup(vm_offset_t vaddr)
 	 */
 	vm_reserv_init();
 #endif
-	/*
-	 * Set an initial domain policy for thread0 so that allocations
-	 * can work.
-	 */
-	domainset_zero();
 
 	return (vaddr);
 }
@@ -1753,7 +1753,7 @@ vm_page_alloc_after(vm_object_t object, vm_pindex_t pindex,
 		    mpred);
 		if (m != NULL)
 			break;
-	} while (vm_domainset_iter_page(&di, &domain, &req) == 0);
+	} while (vm_domainset_iter_page(&di, object, &domain) == 0);
 
 	return (m);
 }
@@ -1990,7 +1990,7 @@ vm_page_alloc_contig(vm_object_t object, vm_pindex_t pindex, int req,
 		    npages, low, high, alignment, boundary, memattr);
 		if (m != NULL)
 			break;
-	} while (vm_domainset_iter_page(&di, &domain, &req) == 0);
+	} while (vm_domainset_iter_page(&di, object, &domain) == 0);
 
 	return (m);
 }
@@ -2191,7 +2191,7 @@ vm_page_alloc_freelist(int freelist, int req)
 		m = vm_page_alloc_freelist_domain(domain, freelist, req);
 		if (m != NULL)
 			break;
-	} while (vm_domainset_iter_page(&di, &domain, &req) == 0);
+	} while (vm_domainset_iter_page(&di, NULL, &domain) == 0);
 
 	return (m);
 }
@@ -2830,7 +2830,7 @@ vm_page_reclaim_contig(int req, u_long npages, vm_paddr_t low, vm_paddr_t high,
 		    high, alignment, boundary);
 		if (ret)
 			break;
-	} while (vm_domainset_iter_page(&di, &domain, &req) == 0);
+	} while (vm_domainset_iter_page(&di, NULL, &domain) == 0);
 
 	return (ret);
 }
@@ -2959,7 +2959,7 @@ vm_wait_doms(const domainset_t *wdoms)
 		 * consume all freed pages while old allocators wait.
 		 */
 		mtx_lock(&vm_domainset_lock);
-		if (DOMAINSET_SUBSET(&vm_min_domains, wdoms)) {
+		if (vm_page_count_min_set(wdoms)) {
 			vm_min_waiters++;
 			msleep(&vm_min_domains, &vm_domainset_lock,
 			    PVM | PDROP, "vmwait", 0);
@@ -3078,7 +3078,7 @@ vm_waitpfault(struct domainset *dset)
 	 * consume all freed pages while old allocators wait.
 	 */
 	mtx_lock(&vm_domainset_lock);
-	if (DOMAINSET_SUBSET(&vm_min_domains, &dset->ds_mask)) {
+	if (vm_page_count_min_set(&dset->ds_mask)) {
 		vm_min_waiters++;
 		msleep(&vm_min_domains, &vm_domainset_lock, PUSER | PDROP,
 		    "pfault", 0);
@@ -3175,7 +3175,11 @@ vm_pqbatch_submit_page(vm_page_t m, uint8_t queue)
 	struct vm_pagequeue *pq;
 	int domain;
 
-	vm_page_assert_locked(m);
+	KASSERT((m->oflags & VPO_UNMANAGED) == 0,
+	    ("page %p is unmanaged", m));
+	KASSERT(mtx_owned(vm_page_lockptr(m)) ||
+	    (m->object == NULL && (m->aflags & PGA_DEQUEUE) != 0),
+	    ("missing synchronization for page %p", m));
 	KASSERT(queue < PQ_COUNT, ("invalid queue %d", queue));
 
 	domain = vm_phys_domain(m);
@@ -3197,8 +3201,9 @@ vm_pqbatch_submit_page(vm_page_t m, uint8_t queue)
 
 	/*
 	 * The page may have been logically dequeued before we acquired the
-	 * page queue lock.  In this case, the page lock prevents the page
-	 * from being logically enqueued elsewhere.
+	 * page queue lock.  In this case, since we either hold the page lock
+	 * or the page is being freed, a different thread cannot be concurrently
+	 * enqueuing the page.
 	 */
 	if (__predict_true(m->queue == queue))
 		vm_pqbatch_process_page(pq, m);
@@ -3279,18 +3284,37 @@ vm_page_dequeue_complete(vm_page_t m)
 void
 vm_page_dequeue_deferred(vm_page_t m)
 {
-	int queue;
+	uint8_t queue;
 
 	vm_page_assert_locked(m);
 
-	queue = atomic_load_8(&m->queue);
-	if (queue == PQ_NONE) {
-		KASSERT((m->aflags & PGA_QUEUE_STATE_MASK) == 0,
-		    ("page %p has queue state", m));
+	if ((queue = vm_page_queue(m)) == PQ_NONE)
 		return;
-	}
-	if ((m->aflags & PGA_DEQUEUE) == 0)
-		vm_page_aflag_set(m, PGA_DEQUEUE);
+	vm_page_aflag_set(m, PGA_DEQUEUE);
+	vm_pqbatch_submit_page(m, queue);
+}
+
+/*
+ * A variant of vm_page_dequeue_deferred() that does not assert the page
+ * lock and is only to be called from vm_page_free_prep().  It is just an
+ * open-coded implementation of vm_page_dequeue_deferred().  Because the
+ * page is being freed, we can assume that nothing else is scheduling queue
+ * operations on this page, so we get for free the mutual exclusion that
+ * is otherwise provided by the page lock.
+ */
+static void
+vm_page_dequeue_deferred_free(vm_page_t m)
+{
+	uint8_t queue;
+
+	KASSERT(m->object == NULL, ("page %p has an object reference", m));
+
+	if ((m->aflags & PGA_DEQUEUE) != 0)
+		return;
+	atomic_thread_fence_acq();
+	if ((queue = m->queue) == PQ_NONE)
+		return;
+	vm_page_aflag_set(m, PGA_DEQUEUE);
 	vm_pqbatch_submit_page(m, queue);
 }
 
@@ -3386,7 +3410,7 @@ vm_page_requeue(vm_page_t m)
 {
 
 	vm_page_assert_locked(m);
-	KASSERT(m->queue != PQ_NONE,
+	KASSERT(vm_page_queue(m) != PQ_NONE,
 	    ("%s: page %p is not logically enqueued", __func__, m));
 
 	if ((m->aflags & PGA_REQUEUE) == 0)
@@ -3479,7 +3503,7 @@ vm_page_free_prep(vm_page_t m)
 	 * dequeue.
 	 */
 	if ((m->oflags & VPO_UNMANAGED) == 0)
-		vm_page_dequeue_deferred(m);
+		vm_page_dequeue_deferred_free(m);
 
 	m->valid = 0;
 	vm_page_undirty(m);
@@ -4497,7 +4521,7 @@ DB_SHOW_COMMAND(pageq, vm_page_print_pageq_info)
 DB_SHOW_COMMAND(pginfo, vm_page_print_pginfo)
 {
 	vm_page_t m;
-	boolean_t phys;
+	boolean_t phys, virt;
 
 	if (!have_addr) {
 		db_printf("show pginfo addr\n");
@@ -4505,7 +4529,10 @@ DB_SHOW_COMMAND(pginfo, vm_page_print_pginfo)
 	}
 
 	phys = strchr(modif, 'p') != NULL;
-	if (phys)
+	virt = strchr(modif, 'v') != NULL;
+	if (virt)
+		m = PHYS_TO_VM_PAGE(pmap_kextract(addr));
+	else if (phys)
 		m = PHYS_TO_VM_PAGE(addr);
 	else
 		m = (vm_page_t)addr;

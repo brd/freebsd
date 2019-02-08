@@ -61,6 +61,7 @@ struct ipq {
 	u_char	ipq_ttl;		/* time for reass q to live */
 	u_char	ipq_p;			/* protocol of this fragment */
 	u_short	ipq_id;			/* sequence id for reassembly */
+	int	ipq_maxoff;		/* total length of packet */
 	struct mbuf *ipq_frags;		/* to ip headers of fragments */
 	struct	in_addr ipq_src,ipq_dst;
 	u_char	ipq_nfrags;		/* # frags in this packet */
@@ -240,8 +241,9 @@ extern int	(*ip_rsvp_vif)(struct socket *, struct sockopt *);
 extern void	(*ip_rsvp_force_done)(struct socket *);
 extern int	(*rsvp_input_p)(struct mbuf **, int *, int);
 
-VNET_DECLARE(struct pfil_head, inet_pfil_hook);	/* packet filter hooks */
-#define	V_inet_pfil_hook	VNET(inet_pfil_hook)
+VNET_DECLARE(struct pfil_head *, inet_pfil_head);
+#define	V_inet_pfil_head	VNET(inet_pfil_head)
+#define	PFIL_INET_NAME		"inet"
 
 void	in_delayed_cksum(struct mbuf *m);
 

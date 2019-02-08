@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause-FreeBSD AND BSD-3-Clause
  *
  * Copyright (c) 2002 JF Hay.  All rights reserved.
- * Copyright (c) 2000 M. Warner Losh.  All rights reserved.
+ * Copyright (c) 2000 M. Warner Losh.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -200,4 +200,4 @@ static driver_t puc_pci_driver = {
 
 DRIVER_MODULE(puc, pci, puc_pci_driver, puc_devclass, 0, 0);
 MODULE_PNP_INFO("U16:vendor;U16:device;U16:#;U16:#;D:#", pci, puc,
-    puc_pci_devices, sizeof(puc_pci_devices[0]), nitems(puc_pci_devices) - 1);
+    puc_pci_devices, nitems(puc_pci_devices) - 1);

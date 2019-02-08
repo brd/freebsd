@@ -165,29 +165,38 @@ static vdev_ops_t *vdev_ops_table[] = {
 
 /* target number of metaslabs per top-level vdev */
 int vdev_max_ms_count = 200;
-SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, max_ms_count, CTLFLAG_RDTUN,
+SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, max_ms_count, CTLFLAG_RWTUN,
     &vdev_max_ms_count, 0,
-    "Maximum number of metaslabs per top-level vdev");
+    "Target number of metaslabs per top-level vdev");
 
 /* minimum number of metaslabs per top-level vdev */
 int vdev_min_ms_count = 16;
-SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, min_ms_count, CTLFLAG_RDTUN,
+SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, min_ms_count, CTLFLAG_RWTUN,
     &vdev_min_ms_count, 0,
     "Minimum number of metaslabs per top-level vdev");
 
 /* practical upper limit of total metaslabs per top-level vdev */
 int vdev_ms_count_limit = 1ULL << 17;
+SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, max_ms_count_limit, CTLFLAG_RWTUN,
+    &vdev_ms_count_limit, 0,
+    "Maximum number of metaslabs per top-level vdev");
 
 /* lower limit for metaslab size (512M) */
 int vdev_default_ms_shift = 29;
-SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, default_ms_shift, CTLFLAG_RDTUN,
+SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, default_ms_shift, CTLFLAG_RWTUN,
     &vdev_default_ms_shift, 0,
-    "Shift between vdev size and number of metaslabs");
+    "Default shift between vdev size and number of metaslabs");
 
 /* upper limit for metaslab size (256G) */
 int vdev_max_ms_shift = 38;
+SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, max_ms_shift, CTLFLAG_RWTUN,
+    &vdev_max_ms_shift, 0,
+    "Maximum shift between vdev size and number of metaslabs");
 
 boolean_t vdev_validate_skip = B_FALSE;
+SYSCTL_INT(_vfs_zfs_vdev, OID_AUTO, validate_skip, CTLFLAG_RWTUN,
+    &vdev_validate_skip, 0,
+    "Bypass vdev validation");
 
 /*
  * Since the DTL space map of a vdev is not expected to have a lot of
@@ -505,17 +514,24 @@ vdev_compact_children(vdev_t *pvd)
 
 	ASSERT(spa_config_held(pvd->vdev_spa, SCL_ALL, RW_WRITER) == SCL_ALL);
 
+	if (oldc == 0)
+		return;
+
 	for (int c = newc = 0; c < oldc; c++)
 		if (pvd->vdev_child[c])
 			newc++;
 
-	newchild = kmem_alloc(newc * sizeof (vdev_t *), KM_SLEEP);
+	if (newc > 0) {
+		newchild = kmem_alloc(newc * sizeof (vdev_t *), KM_SLEEP);
 
-	for (int c = newc = 0; c < oldc; c++) {
-		if ((cvd = pvd->vdev_child[c]) != NULL) {
-			newchild[newc] = cvd;
-			cvd->vdev_id = newc++;
+		for (int c = newc = 0; c < oldc; c++) {
+			if ((cvd = pvd->vdev_child[c]) != NULL) {
+				newchild[newc] = cvd;
+				cvd->vdev_id = newc++;
+			}
 		}
+	} else {
+		newchild = NULL;
 	}
 
 	kmem_free(pvd->vdev_child, oldc * sizeof (vdev_t *));
