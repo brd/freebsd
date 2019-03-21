@@ -10,14 +10,4 @@ MAN=	gettytab.5 ttys.5 getty.8
 WARNS?=	6
 WFORMAT=0
 
-.if exists(${.CURDIR}/etc.${MACHINE}/ttys)
-CONFS+=	etc.${MACHINE}/ttys
-.elif exists(${.CURDIR}/etc.${MACHINE_ARCH}/ttys)
-CONFS+=	etc.${MACHINE_ARCH}/ttys
-.elif exists(${.CURDIR}/etc.${MACHINE_CPUARCH}/ttys)
-CONFS+=	etc.${MACHINE_CPUARCH}/ttys
-.else
-.error etc.MACHINE/ttys missing
-.endif
-
 .include <bsd.prog.mk>
